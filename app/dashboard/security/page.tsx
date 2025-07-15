@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,11 +20,13 @@ import {
   RefreshCw,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function SecurityPage() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true)
   const [autoBackup, setAutoBackup] = useState(true)
   const [encryptionEnabled, setEncryptionEnabled] = useState(true)
+  const router = useRouter()
 
   const securityScore = 85
 
@@ -72,6 +74,20 @@ export default function SecurityPage() {
       status: "warning",
     },
   ]
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user")
+    if (!userData) {
+      router.push("/login")
+      return
+    }
+
+    const user = JSON.parse(userData)
+    if (user.plan !== "premium" && user.plan !== "enterprise") {
+      router.push("/pricing")
+      return
+    }
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gray-50">

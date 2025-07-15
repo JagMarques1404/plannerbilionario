@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Check, X, Zap, Crown, Star } from "lucide-react"
+import { Check, X, Zap, Crown } from "lucide-react"
 import Link from "next/link"
 
 export default function PricingPage() {
@@ -38,7 +38,7 @@ export default function PricingPage() {
         "Segurança premium",
       ],
       limitations: [],
-      buttonText: "Em Breve",
+      buttonText: "Assinar Agora",
       buttonVariant: "default" as const,
       popular: true,
     },
@@ -87,10 +87,6 @@ export default function PricingPage() {
       <div className="container mx-auto px-4 py-16">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <Badge className="mb-4" variant="secondary">
-            <Star className="w-4 h-4 mr-1" />
-            Área Premium Temporariamente Liberada
-          </Badge>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Escolha o plano ideal para você</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Comece gratuitamente e faça upgrade quando precisar de mais recursos. Todos os recursos premium estão
@@ -145,47 +141,68 @@ export default function PricingPage() {
                   </div>
                 )}
 
-                <Button className="w-full" variant={plan.buttonVariant} disabled={plan.name === "Premium"}>
-                  {plan.buttonText}
-                </Button>
+                {plan.name === "Premium" ? (
+                  <Link href="/checkout?plan=premium">
+                    <Button className="w-full">Assinar Agora</Button>
+                  </Link>
+                ) : plan.name === "Enterprise" ? (
+                  <Link href="/checkout?plan=enterprise">
+                    <Button className="w-full bg-transparent" variant="outline">
+                      Assinar Enterprise
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button className="w-full" variant={plan.buttonVariant} disabled={plan.name === "Gratuito"}>
+                    {plan.buttonText}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Payment Notice */}
-        <Card className="mt-16 max-w-4xl mx-auto border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Crown className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-yellow-800 mb-2">Recursos Premium Temporariamente Liberados</h3>
-              <p className="text-yellow-700 mb-6">
-                Enquanto configuramos os meios de pagamento, você tem acesso completo a todos os recursos premium.
-                Aproveite para testar todas as funcionalidades!
-              </p>
-              <div className="grid md:grid-cols-2 gap-4 text-left">
-                <div>
-                  <h4 className="font-semibold text-yellow-800 mb-2">Meios de pagamento em desenvolvimento:</h4>
-                  <ul className="space-y-1 text-yellow-700">
-                    <li>• Cartão de crédito/débito</li>
-                    <li>• PIX</li>
-                    <li>• Boleto bancário</li>
-                    <li>• PayPal</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-yellow-800 mb-2">Em breve:</h4>
-                  <ul className="space-y-1 text-yellow-700">
-                    <li>• Pagamento recorrente automático</li>
-                    <li>• Descontos para pagamento anual</li>
-                    <li>• Período de teste gratuito</li>
-                    <li>• Garantia de reembolso</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Payment Methods */}
+        <div className="mt-16 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-8">Métodos de Pagamento</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Cartão de Crédito/Débito</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Visa, Mastercard, American Express</p>
+                <p className="text-sm text-gray-500">Cobrança automática mensal</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">PIX</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Pagamento instantâneo</p>
+                <p className="text-sm text-gray-500">Confirmação imediata</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Boleto Bancário</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Vencimento em 3 dias úteis</p>
+                <p className="text-sm text-gray-500">Confirmação em até 2 dias úteis</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">PayPal</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Pagamento internacional</p>
+                <p className="text-sm text-gray-500">Processamento seguro</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* FAQ */}
         <div className="mt-16 max-w-4xl mx-auto">

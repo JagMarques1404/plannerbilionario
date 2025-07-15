@@ -6,8 +6,26 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { BarChart3, TrendingUp, TrendingDown, Users, Eye, MousePointer, Crown, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AnalyticsPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user")
+    if (!userData) {
+      router.push("/login")
+      return
+    }
+
+    const user = JSON.parse(userData)
+    if (user.plan !== "premium" && user.plan !== "enterprise") {
+      router.push("/pricing")
+      return
+    }
+  }, [router])
+
   const metrics = [
     {
       title: "Visualizações",
@@ -69,14 +87,14 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Premium Notice */}
-        <Card className="mb-8 border-blue-200 bg-blue-50">
+        {/* Premium Active */}
+        <Card className="mb-8 border-green-200 bg-green-50">
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2 mb-2">
-              <Crown className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold text-blue-800">Recurso Premium Ativo</span>
+              <Crown className="h-5 w-5 text-green-600" />
+              <span className="font-semibold text-green-800">Recurso Premium Ativo</span>
             </div>
-            <p className="text-blue-700">
+            <p className="text-green-700">
               Você está acessando relatórios avançados com dados em tempo real e análises preditivas.
             </p>
           </CardContent>

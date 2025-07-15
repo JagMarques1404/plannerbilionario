@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,25 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Users, Crown, ArrowLeft, Plus, Mail, Shield, Edit, Trash2, UserPlus } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function TeamPage() {
   const [inviteEmail, setInviteEmail] = useState("")
+  const router = useRouter()
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user")
+    if (!userData) {
+      router.push("/login")
+      return
+    }
+
+    const user = JSON.parse(userData)
+    if (user.plan !== "premium" && user.plan !== "enterprise") {
+      router.push("/pricing")
+      return
+    }
+  }, [router])
 
   const teamMembers = [
     {
@@ -92,7 +108,8 @@ export default function TeamPage() {
               <span className="font-semibold text-green-800">Recurso Premium Ativo</span>
             </div>
             <p className="text-green-700">
-              Colabore com sua equipe, defina permissões e trabalhe em conjunto em tempo real.
+              Seu plano premium está ativo. Colabore com sua equipe, defina permissões e trabalhe em conjunto em tempo
+              real.
             </p>
           </CardContent>
         </Card>

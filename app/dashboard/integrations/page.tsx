@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,9 +24,19 @@ import {
   AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function IntegrationsPage() {
   const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user")
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+  }, [])
 
   const integrations = [
     {
@@ -140,6 +150,11 @@ export default function IntegrationsPage() {
 
   const connectedCount = integrations.filter((i) => i.status === "connected").length
 
+  const canAccessPremiumIntegration = (integration: any) => {
+    if (!integration.premium) return true
+    return user?.plan === "premium" || user?.plan === "enterprise"
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -173,20 +188,6 @@ export default function IntegrationsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Premium Notice */}
-        <Card className="mb-8 border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <Crown className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold text-blue-800">Integrações Premium Disponíveis</span>
-            </div>
-            <p className="text-blue-700">
-              Acesse integrações avançadas como Slack, AWS, PostgreSQL e muito mais com recursos premium temporariamente
-              liberados.
-            </p>
-          </CardContent>
-        </Card>
-
         {/* Search and Filters */}
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -316,9 +317,17 @@ export default function IntegrationsPage() {
                         </Button>
                       </>
                     ) : (
-                      <Button size="sm" disabled={integration.premium && false}>
+                      <Button
+                        size="sm"
+                        disabled={integration.premium && !canAccessPremiumIntegration(integration)}
+                        onClick={() => {
+                          if (integration.premium && !canAccessPremiumIntegration(integration)) {
+                            router.push("/pricing")
+                          }
+                        }}
+                      >
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        Conectar
+                        {integration.premium && !canAccessPremiumIntegration(integration) ? "Upgrade" : "Conectar"}
                       </Button>
                     )}
                   </div>

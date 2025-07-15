@@ -66,24 +66,6 @@ export default function DashboardPage() {
           <p className="text-gray-600">Bem-vindo ao seu dashboard. Aqui você pode acessar todas as funcionalidades.</p>
         </div>
 
-        {/* Premium Notice */}
-        <Card className="mb-8 border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <Crown className="h-5 w-5 text-yellow-600" />
-              <span className="font-semibold text-yellow-800">Área Premium Temporariamente Aberta</span>
-            </div>
-            <p className="text-yellow-700 mb-4">
-              Você tem acesso completo a todos os recursos premium enquanto configuramos os meios de pagamento.
-            </p>
-            <Link href="/pricing">
-              <Button variant="outline" size="sm">
-                Ver Planos Futuros
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -170,36 +152,50 @@ export default function DashboardPage() {
                 <CardTitle className="flex items-center space-x-2">
                   <Crown className="h-5 w-5 text-blue-600" />
                   <span>Recursos Premium</span>
-                  <Badge className="bg-blue-600">Acesso Liberado</Badge>
+                  {user.plan === "premium" ? (
+                    <Badge className="bg-blue-600">Ativo</Badge>
+                  ) : (
+                    <Badge variant="outline">Upgrade Necessário</Badge>
+                  )}
                 </CardTitle>
-                <CardDescription>Funcionalidades avançadas temporariamente disponíveis</CardDescription>
+                <CardDescription>
+                  {user.plan === "premium"
+                    ? "Funcionalidades avançadas disponíveis"
+                    : "Faça upgrade para acessar recursos premium"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Link href="/dashboard/analytics">
+                <Link href={user.plan === "premium" ? "/dashboard/analytics" : "/pricing"}>
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
                     <div className="flex items-center space-x-3">
                       <BarChart3 className="h-5 w-5 text-blue-600" />
                       <span>Relatórios Avançados</span>
                     </div>
-                    <Badge variant="outline">Disponível</Badge>
+                    <Badge variant={user.plan === "premium" ? "outline" : "secondary"}>
+                      {user.plan === "premium" ? "Disponível" : "Premium"}
+                    </Badge>
                   </div>
                 </Link>
-                <Link href="/dashboard/team">
+                <Link href={user.plan === "premium" ? "/dashboard/team" : "/pricing"}>
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
                     <div className="flex items-center space-x-3">
                       <Users className="h-5 w-5 text-green-600" />
                       <span>Colaboração em Equipe</span>
                     </div>
-                    <Badge variant="outline">Disponível</Badge>
+                    <Badge variant={user.plan === "premium" ? "outline" : "secondary"}>
+                      {user.plan === "premium" ? "Disponível" : "Premium"}
+                    </Badge>
                   </div>
                 </Link>
-                <Link href="/dashboard/security">
+                <Link href={user.plan === "premium" ? "/dashboard/security" : "/pricing"}>
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
                     <div className="flex items-center space-x-3">
                       <Shield className="h-5 w-5 text-purple-600" />
                       <span>Segurança Avançada</span>
                     </div>
-                    <Badge variant="outline">Disponível</Badge>
+                    <Badge variant={user.plan === "premium" ? "outline" : "secondary"}>
+                      {user.plan === "premium" ? "Disponível" : "Premium"}
+                    </Badge>
                   </div>
                 </Link>
               </CardContent>
