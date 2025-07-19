@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,483 +10,466 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Zap,
-  Building2,
-  CreditCard,
+  BarChart3,
   Shield,
-  TrendingUp,
-  Users,
   CheckCircle,
   AlertTriangle,
   Settings,
-  ExternalLink,
+  RefreshCw,
+  TrendingUp,
+  DollarSign,
+  CreditCard,
+  Building2,
+  Smartphone,
 } from "lucide-react"
+import { MarketWidget } from "@/components/market-widget"
+import { ComplianceChecker } from "@/components/compliance-checker"
 
-const apiIntegrations = [
+interface Integration {
+  id: string
+  name: string
+  description: string
+  category: "financial" | "banking" | "trading" | "compliance"
+  status: "active" | "inactive" | "error" | "pending"
+  icon: React.ReactNode
+  features: string[]
+  lastSync?: string
+  dataPoints?: number
+  isSimulated: boolean
+}
+
+const integrations: Integration[] = [
   {
     id: "yahoo-finance",
     name: "Yahoo Finance API",
-    description: "Cotações em tempo real de ações e índices",
-    status: "connected",
-    lastSync: "2024-01-15 14:30",
-    icon: "📈",
+    description: "Dados de mercado em tempo real",
+    category: "financial",
+    status: "active",
+    icon: <BarChart3 className="h-5 w-5" />,
+    features: ["Cotações em tempo real", "Dados históricos", "Indicadores técnicos"],
+    lastSync: "2024-01-20T14:30:00",
+    dataPoints: 1250,
+    isSimulated: true,
   },
   {
-    id: "bcb-api",
-    name: "API Banco Central",
-    description: "Dados oficiais de inflação e taxa Selic",
-    status: "connected",
-    lastSync: "2024-01-15 14:25",
-    icon: "🏛️",
+    id: "banco-central",
+    name: "Banco Central do Brasil",
+    description: "Dados econômicos oficiais",
+    category: "financial",
+    status: "active",
+    icon: <Building2 className="h-5 w-5" />,
+    features: ["Taxa Selic", "IPCA", "Câmbio oficial"],
+    lastSync: "2024-01-20T12:00:00",
+    dataPoints: 850,
+    isSimulated: true,
   },
-  {
-    id: "crypto-api",
-    name: "CoinGecko API",
-    description: "Preços de criptomoedas em tempo real",
-    status: "connected",
-    lastSync: "2024-01-15 14:35",
-    icon: "₿",
-  },
-  {
-    id: "news-api",
-    name: "Financial News API",
-    description: "Notícias financeiras relevantes",
-    status: "pending",
-    lastSync: "Nunca",
-    icon: "📰",
-  },
-]
-
-const bankingIntegrations = [
   {
     id: "nubank",
     name: "Nubank",
-    description: "Conta corrente e cartão de crédito",
-    status: "connected",
-    balance: "R$ 12.450,00",
-    icon: "💜",
+    description: "Integração bancária completa",
+    category: "banking",
+    status: "active",
+    icon: <CreditCard className="h-5 w-5" />,
+    features: ["Saldo em tempo real", "Extrato automático", "Categorização"],
+    lastSync: "2024-01-20T14:25:00",
+    dataPoints: 2100,
+    isSimulated: true,
   },
   {
-    id: "itau",
-    name: "Itaú",
-    description: "Conta poupança e investimentos",
-    status: "connected",
-    balance: "R$ 45.230,00",
-    icon: "🔶",
-  },
-  {
-    id: "bradesco",
-    name: "Bradesco",
-    description: "Conta corrente empresarial",
-    status: "disconnected",
-    balance: "---",
-    icon: "🔴",
-  },
-  {
-    id: "santander",
-    name: "Santander",
-    description: "Cartão de crédito e financiamentos",
-    status: "pending",
-    balance: "---",
-    icon: "🔺",
-  },
-]
-
-const tradingIntegrations = [
-  {
-    id: "clear",
-    name: "Clear Corretora",
-    description: "Ações, FIIs e renda fixa",
-    status: "connected",
-    portfolio: "R$ 85.600,00",
-    icon: "📊",
-  },
-  {
-    id: "rico",
-    name: "Rico Investimentos",
-    description: "Tesouro Direto e CDBs",
-    status: "connected",
-    portfolio: "R$ 32.100,00",
-    icon: "💰",
+    id: "pix-simulator",
+    name: "PIX Simulator",
+    description: "Simulador de transações PIX",
+    category: "banking",
+    status: "active",
+    icon: <Smartphone className="h-5 w-5" />,
+    features: ["Transferências instantâneas", "QR Code", "Chave PIX"],
+    lastSync: "2024-01-20T14:20:00",
+    dataPoints: 450,
+    isSimulated: true,
   },
   {
     id: "binance",
     name: "Binance",
-    description: "Criptomoedas e trading",
-    status: "pending",
-    portfolio: "---",
-    icon: "🟡",
+    description: "Exchange de criptomoedas",
+    category: "trading",
+    status: "error",
+    icon: <DollarSign className="h-5 w-5" />,
+    features: ["Trading automático", "Portfolio tracking", "Alertas de preço"],
+    lastSync: "2024-01-19T18:45:00",
+    dataPoints: 0,
+    isSimulated: true,
+  },
+  {
+    id: "clear-corretora",
+    name: "Clear Corretora",
+    description: "Corretora de valores",
+    category: "trading",
+    status: "inactive",
+    icon: <TrendingUp className="h-5 w-5" />,
+    features: ["Ações", "FIIs", "Renda fixa"],
+    isSimulated: true,
+  },
+  {
+    id: "compliance-engine",
+    name: "Compliance Engine",
+    description: "Sistema de conformidade",
+    category: "compliance",
+    status: "active",
+    icon: <Shield className="h-5 w-5" />,
+    features: ["KYC", "AML", "Monitoramento"],
+    lastSync: "2024-01-20T13:00:00",
+    dataPoints: 95,
+    isSimulated: true,
   },
 ]
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "connected":
-      return <CheckCircle className="h-4 w-4 text-green-600" />
-    case "pending":
-      return <AlertTriangle className="h-4 w-4 text-yellow-600" />
-    case "disconnected":
-      return <AlertTriangle className="h-4 w-4 text-red-600" />
-    default:
-      return <AlertTriangle className="h-4 w-4 text-gray-600" />
-  }
-}
-
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "connected":
-      return <Badge className="bg-green-100 text-green-800">Conectado</Badge>
-    case "pending":
-      return <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>
-    case "disconnected":
-      return <Badge className="bg-red-100 text-red-800">Desconectado</Badge>
-    default:
-      return <Badge className="bg-gray-100 text-gray-800">Desconhecido</Badge>
-  }
-}
-
 export default function IntegrationsPage() {
-  const [selectedTab, setSelectedTab] = useState("apis")
+  const [activeIntegrations, setActiveIntegrations] = useState(integrations)
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  const toggleIntegration = (id: string) => {
+    setActiveIntegrations((prev) =>
+      prev.map((integration) =>
+        integration.id === id
+          ? {
+              ...integration,
+              status: integration.status === "active" ? "inactive" : "active",
+              lastSync: integration.status === "inactive" ? new Date().toISOString() : integration.lastSync,
+            }
+          : integration,
+      ),
+    )
+  }
+
+  const syncIntegration = async (id: string) => {
+    setActiveIntegrations((prev) =>
+      prev.map((integration) =>
+        integration.id === id
+          ? {
+              ...integration,
+              status: "pending",
+            }
+          : integration,
+      ),
+    )
+
+    // Simular sincronização
+    setTimeout(() => {
+      setActiveIntegrations((prev) =>
+        prev.map((integration) =>
+          integration.id === id
+            ? {
+                ...integration,
+                status: "active",
+                lastSync: new Date().toISOString(),
+                dataPoints: Math.floor(Math.random() * 2000) + 500,
+              }
+            : integration,
+        ),
+      )
+    }, 2000)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800"
+      case "inactive":
+        return "bg-gray-100 text-gray-800"
+      case "error":
+        return "bg-red-100 text-red-800"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "error":
+        return <AlertTriangle className="h-4 w-4 text-red-600" />
+      case "pending":
+        return <RefreshCw className="h-4 w-4 text-yellow-600 animate-spin" />
+      default:
+        return null
+    }
+  }
+
+  const filteredIntegrations =
+    selectedCategory === "all"
+      ? activeIntegrations
+      : activeIntegrations.filter((integration) => integration.category === selectedCategory)
+
+  const activeCount = activeIntegrations.filter((i) => i.status === "active").length
+  const totalDataPoints = activeIntegrations.reduce((acc, i) => acc + (i.dataPoints || 0), 0)
 
   return (
     <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Integrações</h1>
-          <p className="text-gray-600 text-lg">Conecte suas contas e APIs para uma experiência completa</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Integrações Simuladas</h1>
+          <p className="text-gray-600 text-lg">Conecte-se com APIs e serviços financeiros (modo demonstração)</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 text-lg">
-            🏖️ MODO SANDBOX
-          </Badge>
-        </div>
+        <Badge className="bg-red-500 text-white px-4 py-2">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          MODO SIMULADO
+        </Badge>
       </div>
 
-      {/* Status Overview */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="card-hover card-premium border-0 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium opacity-90">APIs Conectadas</CardTitle>
-            <Zap className="h-5 w-5 opacity-90" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-1">3/4</div>
-            <p className="text-sm opacity-90">75% ativas</p>
+        <Card className="card-premium border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Integrações Ativas</p>
+                <p className="text-3xl font-bold text-gray-900">{activeCount}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Zap className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover card-premium border-0 bg-gradient-to-br from-blue-500 to-cyan-600 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium opacity-90">Bancos Conectados</CardTitle>
-            <Building2 className="h-5 w-5 opacity-90" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-1">2/4</div>
-            <p className="text-sm opacity-90">R$ 57.680 total</p>
+        <Card className="card-premium border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pontos de Dados</p>
+                <p className="text-3xl font-bold text-gray-900">{totalDataPoints.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover card-premium border-0 bg-gradient-to-br from-purple-500 to-pink-600 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium opacity-90">Corretoras</CardTitle>
-            <TrendingUp className="h-5 w-5 opacity-90" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-1">2/3</div>
-            <p className="text-sm opacity-90">R$ 117.700 investido</p>
+        <Card className="card-premium border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Uptime</p>
+                <p className="text-3xl font-bold text-gray-900">99.9%</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Shield className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover card-premium border-0 bg-gradient-to-br from-yellow-500 to-orange-600 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium opacity-90">Compliance</CardTitle>
-            <Shield className="h-5 w-5 opacity-90" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-1">100%</div>
-            <p className="text-sm opacity-90">Todas aprovadas</p>
+        <Card className="card-premium border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Última Sync</p>
+                <p className="text-lg font-bold text-gray-900">Agora</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <RefreshCw className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+      <Tabs defaultValue="integrations" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 bg-white p-1 rounded-2xl shadow-lg">
-          <TabsTrigger value="apis" className="rounded-xl font-semibold">
-            APIs Financeiras
+          <TabsTrigger value="integrations" className="rounded-xl font-semibold">
+            Integrações
           </TabsTrigger>
-          <TabsTrigger value="banking" className="rounded-xl font-semibold">
-            Bancos
+          <TabsTrigger value="market" className="rounded-xl font-semibold">
+            Mercado
           </TabsTrigger>
-          <TabsTrigger value="trading" className="rounded-xl font-semibold">
-            Corretoras
+          <TabsTrigger value="compliance" className="rounded-xl font-semibold">
+            Compliance
           </TabsTrigger>
           <TabsTrigger value="settings" className="rounded-xl font-semibold">
             Configurações
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="apis" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-blue-500" />
-                APIs Financeiras
-              </CardTitle>
-              <CardDescription>Conecte APIs para dados em tempo real</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {apiIntegrations.map((api) => (
-                <div
-                  key={api.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl">{api.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{api.name}</h4>
-                      <p className="text-gray-600 text-sm">{api.description}</p>
-                      <p className="text-gray-500 text-xs mt-1">Última sincronização: {api.lastSync}</p>
+        <TabsContent value="integrations" className="space-y-6">
+          {/* Category Filter */}
+          <div className="flex space-x-2">
+            <Button
+              variant={selectedCategory === "all" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("all")}
+              className="rounded-xl"
+            >
+              Todas
+            </Button>
+            <Button
+              variant={selectedCategory === "financial" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("financial")}
+              className="rounded-xl"
+            >
+              Financeiras
+            </Button>
+            <Button
+              variant={selectedCategory === "banking" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("banking")}
+              className="rounded-xl"
+            >
+              Bancárias
+            </Button>
+            <Button
+              variant={selectedCategory === "trading" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("trading")}
+              className="rounded-xl"
+            >
+              Trading
+            </Button>
+            <Button
+              variant={selectedCategory === "compliance" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("compliance")}
+              className="rounded-xl"
+            >
+              Compliance
+            </Button>
+          </div>
+
+          {/* Integrations Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredIntegrations.map((integration) => (
+              <Card key={integration.id} className="card-premium border-0">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        {integration.icon}
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{integration.name}</CardTitle>
+                        <CardDescription>{integration.description}</CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={integration.status === "active"}
+                      onCheckedChange={() => toggleIntegration(integration.id)}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Badge className={getStatusColor(integration.status)}>
+                        {getStatusIcon(integration.status)}
+                        <span className="ml-1">
+                          {integration.status === "active"
+                            ? "Ativo"
+                            : integration.status === "inactive"
+                              ? "Inativo"
+                              : integration.status === "error"
+                                ? "Erro"
+                                : "Sincronizando"}
+                        </span>
+                      </Badge>
+                      {integration.isSimulated && (
+                        <Badge variant="outline" className="text-xs">
+                          SIMULADO
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm text-gray-900">Funcionalidades:</h4>
+                      <div className="space-y-1">
+                        {integration.features.map((feature, index) => (
+                          <div key={index} className="flex items-center space-x-2 text-sm text-gray-600">
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {integration.lastSync && (
+                      <div className="text-xs text-gray-500">
+                        Última sincronização: {new Date(integration.lastSync).toLocaleString()}
+                      </div>
+                    )}
+
+                    {integration.dataPoints && (
+                      <div className="text-xs text-gray-500">
+                        Pontos de dados: {integration.dataPoints.toLocaleString()}
+                      </div>
+                    )}
+
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => syncIntegration(integration.id)}
+                        disabled={integration.status === "pending"}
+                        className="flex-1 bg-transparent"
+                      >
+                        <RefreshCw
+                          className={`h-3 w-3 mr-1 ${integration.status === "pending" ? "animate-spin" : ""}`}
+                        />
+                        Sincronizar
+                      </Button>
+                      <Button size="sm" variant="outline" className="bg-transparent">
+                        <Settings className="h-3 w-3 mr-1" />
+                        Config
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(api.status)}
-                    {getStatusBadge(api.status)}
-                    <Switch checked={api.status === "connected"} />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
-        <TabsContent value="banking" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <Building2 className="h-5 w-5 mr-2 text-green-500" />
-                Conexões Bancárias
-              </CardTitle>
-              <CardDescription>Conecte suas contas bancárias para visão unificada</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {bankingIntegrations.map((bank) => (
-                <div
-                  key={bank.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl">{bank.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{bank.name}</h4>
-                      <p className="text-gray-600 text-sm">{bank.description}</p>
-                      <p className="text-green-600 font-medium text-sm mt-1">Saldo: {bank.balance}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(bank.status)}
-                    {getStatusBadge(bank.status)}
-                    <Button size="sm" variant="outline" className="rounded-xl bg-transparent">
-                      {bank.status === "connected" ? "Gerenciar" : "Conectar"}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* PIX Integration */}
-          <Card className="card-premium border-0 bg-gradient-to-br from-green-50 to-emerald-50">
-            <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <CreditCard className="h-5 w-5 mr-2 text-green-500" />
-                PIX Integrado
-              </CardTitle>
-              <CardDescription>Transferências instantâneas entre contas conectadas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 bg-white rounded-xl border">
-                  <h4 className="font-semibold text-gray-900 mb-2">Chaves PIX Cadastradas</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>CPF</span>
-                      <span className="text-green-600">***.***.***-**</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Email</span>
-                      <span className="text-green-600">julius@*****.com</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Telefone</span>
-                      <span className="text-green-600">(11) ****-****</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-white rounded-xl border">
-                  <h4 className="font-semibold text-gray-900 mb-2">Transações Recentes</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Recebido</span>
-                      <span className="text-green-600">+R$ 500,00</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Enviado</span>
-                      <span className="text-red-600">-R$ 150,00</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Recebido</span>
-                      <span className="text-green-600">+R$ 1.200,00</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="market" className="space-y-6">
+          <MarketWidget />
         </TabsContent>
 
-        <TabsContent value="trading" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2 text-purple-500" />
-                Corretoras e Investimentos
-              </CardTitle>
-              <CardDescription>Conecte suas corretoras para visão consolidada</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {tradingIntegrations.map((broker) => (
-                <div
-                  key={broker.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl">{broker.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{broker.name}</h4>
-                      <p className="text-gray-600 text-sm">{broker.description}</p>
-                      <p className="text-purple-600 font-medium text-sm mt-1">Portfólio: {broker.portfolio}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(broker.status)}
-                    {getStatusBadge(broker.status)}
-                    <Button size="sm" variant="outline" className="rounded-xl bg-transparent">
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      {broker.status === "connected" ? "Ver Detalhes" : "Conectar"}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Social Trading */}
-          <Card className="card-premium border-0 bg-gradient-to-br from-blue-50 to-purple-50">
-            <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <Users className="h-5 w-5 mr-2 text-blue-500" />
-                Social Trading
-              </CardTitle>
-              <CardDescription>Siga e copie estratégias de traders experientes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 bg-white rounded-xl border text-center">
-                  <div className="text-2xl mb-2">👑</div>
-                  <h4 className="font-semibold text-gray-900">Traders Seguidos</h4>
-                  <p className="text-2xl font-bold text-blue-600">12</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border text-center">
-                  <div className="text-2xl mb-2">📈</div>
-                  <h4 className="font-semibold text-gray-900">Operações Copiadas</h4>
-                  <p className="text-2xl font-bold text-green-600">47</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border text-center">
-                  <div className="text-2xl mb-2">💰</div>
-                  <h4 className="font-semibold text-gray-900">Retorno Médio</h4>
-                  <p className="text-2xl font-bold text-purple-600">+18.5%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="compliance" className="space-y-6">
+          <ComplianceChecker />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
           <Card className="card-premium border-0">
             <CardHeader>
-              <CardTitle className="text-gray-900 flex items-center">
-                <Settings className="h-5 w-5 mr-2 text-gray-500" />
-                Configurações de Integração
-              </CardTitle>
-              <CardDescription>Gerencie suas preferências e configurações</CardDescription>
+              <CardTitle>Configurações Gerais</CardTitle>
+              <CardDescription>Configure suas integrações e preferências</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Sincronização Automática</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Dados de mercado</p>
-                      <p className="text-sm text-gray-600">Atualizar cotações a cada 5 minutos</p>
-                    </div>
-                    <Switch defaultChecked />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Sincronização Automática</h4>
+                    <p className="text-sm text-gray-600">Atualizar dados automaticamente a cada 5 minutos</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Saldos bancários</p>
-                      <p className="text-sm text-gray-600">Sincronizar saldos diariamente</p>
-                    </div>
-                    <Switch defaultChecked />
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Notificações de Erro</h4>
+                    <p className="text-sm text-gray-600">Receber alertas quando integrações falharem</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Transações</p>
-                      <p className="text-sm text-gray-600">Importar transações automaticamente</p>
-                    </div>
-                    <Switch />
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Modo Debug</h4>
+                    <p className="text-sm text-gray-600">Mostrar logs detalhados das integrações</p>
                   </div>
+                  <Switch />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Notificações</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Falhas de conexão</p>
-                      <p className="text-sm text-gray-600">Notificar quando uma integração falhar</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Novas oportunidades</p>
-                      <p className="text-sm text-gray-600">Alertas de investimento baseados no perfil</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Segurança</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Autenticação 2FA</p>
-                      <p className="text-sm text-gray-600">Exigir 2FA para novas integrações</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Criptografia avançada</p>
-                      <p className="text-sm text-gray-600">Usar criptografia end-to-end</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
+              <div className="pt-4 border-t">
+                <Button className="w-full bg-blue-500 hover:bg-blue-600">Salvar Configurações</Button>
               </div>
             </CardContent>
           </Card>

@@ -1,90 +1,162 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { TrendingUp, TrendingDown, RefreshCw, DollarSign, BarChart3 } from "lucide-react"
 
-const marketData = [
+interface MarketData {
+  symbol: string
+  name: string
+  price: number
+  change: number
+  changePercent: number
+  volume: number
+}
+
+const mockMarketData: MarketData[] = [
+  {
+    symbol: "BILLION",
+    name: "Julius Token",
+    price: 1.0,
+    change: 0.05,
+    changePercent: 5.26,
+    volume: 1250000,
+  },
   {
     symbol: "IBOV",
     name: "Ibovespa",
-    price: 126847,
-    change: 2.34,
-    changePercent: 1.88,
-  },
-  {
-    symbol: "USDBRL",
-    name: "Dólar",
-    price: 5.23,
-    change: -0.05,
-    changePercent: -0.95,
-  },
-  {
-    symbol: "BITCOIN",
-    name: "Bitcoin",
-    price: 43250,
+    price: 125430,
     change: 1250,
-    changePercent: 2.98,
+    changePercent: 1.01,
+    volume: 8500000000,
   },
   {
-    symbol: "BILLION",
-    name: "$BILLION Token",
-    price: 1.25,
-    change: 0.03,
-    changePercent: 2.46,
+    symbol: "PETR4",
+    name: "Petrobras",
+    price: 32.45,
+    change: -0.85,
+    changePercent: -2.55,
+    volume: 45000000,
+  },
+  {
+    symbol: "VALE3",
+    name: "Vale",
+    price: 65.2,
+    change: 1.2,
+    changePercent: 1.87,
+    volume: 32000000,
   },
 ]
 
 export function MarketWidget() {
+  const [marketData, setMarketData] = useState<MarketData[]>(mockMarketData)
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState(new Date())
+
+  const updateMarketData = () => {
+    setIsLoading(true)
+
+    // Simular atualização dos dados
+    setTimeout(() => {
+      setMarketData((prev) =>
+        prev.map((item) => ({
+          ...item,
+          price: item.price + (Math.random() - 0.5) * (item.price * 0.02),
+          change: (Math.random() - 0.5) * (item.price * 0.05),
+          changePercent: (Math.random() - 0.5) * 5,
+          volume: Math.floor(item.volume * (0.8 + Math.random() * 0.4)),
+        })),
+      )
+      setLastUpdate(new Date())
+      setIsLoading(false)
+    }, 1500)
+  }
+
+  // Auto-update a cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(updateMarketData, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <Card className="card-premium border-0">
       <CardHeader>
-        <CardTitle className="text-gray-900 flex items-center">
-          <Activity className="h-5 w-5 mr-2 text-green-500" />
-          Mercado em Tempo Real
-        </CardTitle>
-        <CardDescription>Dados simulados para demonstração</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {marketData.map((item, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl"
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-gray-900 flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-blue-500" />
+              Mercado em Tempo Real
+            </CardTitle>
+            <CardDescription>Última atualização: {lastUpdate.toLocaleTimeString()}</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={updateMarketData}
+            disabled={isLoading}
+            className="rounded-xl bg-transparent"
           >
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <span className="font-semibold text-gray-900">{item.symbol}</span>
-                <Badge variant="outline" className="text-xs">
-                  {item.name}
-                </Badge>
-              </div>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-lg font-bold">
-                  {item.symbol === "USDBRL" || item.symbol === "BILLION"
-                    ? `R$ ${item.price.toFixed(2)}`
-                    : item.price.toLocaleString()}
-                </span>
-                <div className={`flex items-center space-x-1 ${item.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {item.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span className="text-sm font-medium">
-                    {item.changePercent >= 0 ? "+" : ""}
-                    {item.changePercent.toFixed(2)}%
-                  </span>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {marketData.map((item) => (
+            <div
+              key={item.symbol}
+              className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">{item.symbol}</h4>
+                  <p className="text-sm text-gray-600">{item.name}</p>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
 
-        <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
-          <div className="flex items-center space-x-2 mb-2">
-            <DollarSign className="h-4 w-4 text-yellow-600" />
-            <span className="font-semibold text-yellow-800">$BILLION Token</span>
-          </div>
-          <div className="text-sm text-yellow-700">
-            <p>Volume 24h: R$ 2.8M</p>
-            <p>Market Cap: R$ 125M</p>
-            <p className="text-xs mt-1 opacity-75">*Dados simulados para demonstração</p>
+              <div className="text-right">
+                <div className="font-bold text-lg text-gray-900">
+                  {item.symbol === "BILLION" ? "$" : "R$"}{" "}
+                  {item.price.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    className={item.changePercent >= 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                  >
+                    {item.changePercent >= 0 ? (
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                    )}
+                    {item.changePercent >= 0 ? "+" : ""}
+                    {item.changePercent.toFixed(2)}%
+                  </Badge>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Vol: {item.volume.toLocaleString()}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-900">$BILLION Token</h4>
+              <p className="text-sm text-gray-600">Token oficial da plataforma</p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">$ {marketData[0]?.price.toFixed(4)}</div>
+              <Badge className="bg-blue-500 text-white">Ativo Nativo</Badge>
+            </div>
           </div>
         </div>
       </CardContent>

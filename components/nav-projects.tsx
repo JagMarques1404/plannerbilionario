@@ -1,6 +1,7 @@
 "use client"
 
-import { Folder, Forward, MoreHorizontal, Trash2, type LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { Folder, MoreHorizontal, Share, Trash2, type LucideIcon } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -37,10 +38,10 @@ export function NavProjects({
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <Link href={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -59,13 +60,13 @@ export function NavProjects({
                   <span>Ver Detalhes</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Forward className="text-muted-foreground" />
+                  <Share className="text-muted-foreground" />
                   <span>Compartilhar</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Trash2 className="text-muted-foreground" />
-                  <span>Remover</span>
+                  <span>Desconectar</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
