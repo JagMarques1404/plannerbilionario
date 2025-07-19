@@ -4,8 +4,8 @@ import "./globals.css"
 import { AppProvider } from "@/contexts/app-context"
 
 export const metadata: Metadata = {
-  title: "👑 DESAFIO BILIONÁRIO",
-  description: "Transforme sua vida financeira em um jogo épico",
+  title: "Julius Invest - Gamificação Financeira",
+  description: "Transforme seus hábitos financeiros em um jogo épico",
     generator: 'v0.dev'
 }
 

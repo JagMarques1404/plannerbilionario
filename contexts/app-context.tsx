@@ -9,19 +9,18 @@ export interface User {
   email: string
   avatar?: string
   patrimonio: number
-  meta12meses: number
-  grupo: string
+  billionTokens: number
   nivel: number
   xp: number
-  billionTokens: number
   streak: number
   posicaoRanking: number
+  joiaAtual: "Bronze" | "Prata" | "Ouro" | "Platina" | "Diamante"
   badges: Badge[]
-  missoesConcluidas: string[]
-  kycStatus: "pending" | "verified" | "rejected"
-  isVip: boolean
+  habitosConcluidos: string[]
   joinedAt: string
   lastLogin: string
+  indicacoes: number
+  totalInvestido: number
 }
 
 export interface Badge {
@@ -33,277 +32,284 @@ export interface Badge {
   unlockedAt: string
 }
 
-export interface Mission {
+export interface Habito {
   id: string
-  title: string
-  description: string
-  category: "daily" | "weekly" | "monthly"
-  difficulty: "easy" | "medium" | "hard"
-  reward: number
+  titulo: string
+  descricao: string
+  icon: string
+  xpReward: number
   billionReward: number
-  progress: number
-  target: number
-  completed: boolean
-  deadline?: string
-  type: "financial" | "educational" | "social" | "health"
+  categoria: "financeiro" | "educacao" | "social" | "mindset"
+  concluido: boolean
+  streak: number
 }
 
-export interface Group {
+export interface Joia {
   id: string
-  name: string
-  minWealth: number
-  entryFee: number
-  monthlyFee: number
-  color: string
+  nome: string
+  preco: number
+  precoVenda: number
+  cor: string
   icon: string
-  benefits: string[]
-  memberCount: number
+  beneficios: string[]
+  requisitos: {
+    patrimonio: number
+    nivel: number
+  }
+}
+
+export interface TokenPrice {
+  timestamp: string
+  price: number
+  volume: number
 }
 
 export interface Transaction {
   id: string
-  type: "deposit" | "withdrawal" | "reward" | "purchase" | "fee"
+  type: "buy" | "sell" | "reward" | "habit"
   amount: number
-  currency: "BRL" | "BILLION"
+  price?: number
   description: string
-  status: "pending" | "completed" | "failed"
-  createdAt: string
+  timestamp: string
 }
 
-export interface Competition {
-  id: string
-  title: string
-  description: string
-  type: "individual" | "group"
-  startDate: string
-  endDate: string
-  prize: number
-  participants: number
-  status: "upcoming" | "active" | "ended"
+export interface CommunityStats {
+  usuariosOnline: number
+  volumeNegociado: number
+  totalAportado: number
+  maiorAporteHoje: number
+  crescimentoSemanal: number
 }
 
 interface AppContextType {
   user: User | null
   setUser: (user: User | null) => void
-  missions: Mission[]
-  groups: Group[]
+  habitos: Habito[]
+  joias: Joia[]
+  tokenPrices: TokenPrice[]
   transactions: Transaction[]
-  competitions: Competition[]
+  communityStats: CommunityStats
+  ranking: User[]
   isAuthenticated: boolean
+  isSandboxMode: boolean
   login: (email: string, password: string) => Promise<boolean>
   register: (userData: any) => Promise<boolean>
   logout: () => void
-  completeMission: (missionId: string) => void
+  completeHabito: (habitoId: string) => void
+  buyJoia: (joiaId: string) => Promise<boolean>
+  sellJoia: (joiaId: string) => Promise<boolean>
+  buyTokens: (amount: number) => Promise<boolean>
+  sellTokens: (amount: number) => Promise<boolean>
+  resetAccount: () => void
   updatePatrimonio: (novoPatrimonio: number) => void
-  purchaseTokens: (amount: number) => Promise<boolean>
-  joinGroup: (groupId: string) => Promise<boolean>
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
-// Dados mockados expandidos
-const mockGroups: Group[] = [
+// Dados mockados para sandbox
+const mockJoias: Joia[] = [
   {
-    id: "iniciante",
-    name: "INICIANTE",
-    minWealth: 0,
-    entryFee: 100,
-    monthlyFee: 97,
-    color: "from-emerald-500 to-teal-600",
-    icon: "🌱",
-    benefits: ["Missões básicas", "Comunidade de apoio", "Conteúdo educativo"],
-    memberCount: 15420,
+    id: "bronze",
+    nome: "Bronze",
+    preco: 1000,
+    precoVenda: 800,
+    cor: "from-amber-600 to-amber-800",
+    icon: "🥉",
+    beneficios: ["Cashback 1%", "Acesso ao chat básico"],
+    requisitos: { patrimonio: 1000, nivel: 1 },
   },
   {
-    id: "crescente",
-    name: "CRESCENTE",
-    minWealth: 10000,
-    entryFee: 500,
-    monthlyFee: 197,
-    color: "from-blue-500 to-cyan-600",
-    icon: "📈",
-    benefits: ["Missões avançadas", "Webinars semanais", "Cashback 1%"],
-    memberCount: 8930,
+    id: "prata",
+    nome: "Prata",
+    preco: 5000,
+    precoVenda: 4000,
+    cor: "from-gray-400 to-gray-600",
+    icon: "🥈",
+    beneficios: ["Cashback 2%", "Missões exclusivas", "Análises semanais"],
+    requisitos: { patrimonio: 5000, nivel: 5 },
   },
   {
-    id: "magnata",
-    name: "MAGNATA",
-    minWealth: 100000,
-    entryFee: 5000,
-    monthlyFee: 297,
-    color: "from-purple-600 to-blue-600",
+    id: "ouro",
+    nome: "Ouro",
+    preco: 25000,
+    precoVenda: 20000,
+    cor: "from-yellow-400 to-yellow-600",
+    icon: "🥇",
+    beneficios: ["Cashback 3%", "Mentoria mensal", "Sinais premium"],
+    requisitos: { patrimonio: 25000, nivel: 10 },
+  },
+  {
+    id: "platina",
+    nome: "Platina",
+    preco: 100000,
+    precoVenda: 80000,
+    cor: "from-slate-300 to-slate-500",
     icon: "💎",
-    benefits: ["Mentoria VIP", "Eventos exclusivos", "Cashback 3%"],
-    memberCount: 2150,
+    beneficios: ["Cashback 5%", "Consultoria 1:1", "Oportunidades VIP"],
+    requisitos: { patrimonio: 100000, nivel: 20 },
   },
   {
-    id: "elite",
-    name: "ELITE",
-    minWealth: 500000,
-    entryFee: 25000,
-    monthlyFee: 497,
-    color: "from-yellow-500 to-orange-600",
-    icon: "👑",
-    benefits: ["Consultoria 1:1", "Oportunidades VIP", "Cashback 5%"],
-    memberCount: 680,
-  },
-  {
-    id: "tita",
-    name: "TITÃ",
-    minWealth: 1000000,
-    entryFee: 50000,
-    monthlyFee: 997,
-    color: "from-red-500 to-pink-600",
-    icon: "🏆",
-    benefits: ["Gestão patrimonial", "Deals exclusivos", "Cashback 7%"],
-    memberCount: 180,
-  },
-  {
-    id: "lendario",
-    name: "LENDÁRIO",
-    minWealth: 10000000,
-    entryFee: 100000,
-    monthlyFee: 1997,
-    color: "from-gray-800 to-black",
-    icon: "⚡",
-    benefits: ["Acesso total", "Investimentos únicos", "Cashback 10%"],
-    memberCount: 25,
+    id: "diamante",
+    nome: "Diamante",
+    preco: 500000,
+    precoVenda: 400000,
+    cor: "from-blue-400 to-purple-600",
+    icon: "💠",
+    beneficios: ["Cashback 10%", "Gestão patrimonial", "Deals exclusivos"],
+    requisitos: { patrimonio: 500000, nivel: 50 },
   },
 ]
 
-const mockMissions: Mission[] = [
+const mockHabitos: Habito[] = [
   {
-    id: "1",
-    title: "Registrar gastos diários",
-    description: "Anote todos os seus gastos durante o dia",
-    category: "daily",
-    difficulty: "easy",
-    reward: 50,
+    id: "registrar-gastos",
+    titulo: "Registrar Gastos",
+    descricao: "Anote todos os gastos do dia",
+    icon: "📝",
+    xpReward: 50,
     billionReward: 10,
-    progress: 1,
-    target: 1,
-    completed: false,
-    type: "financial",
+    categoria: "financeiro",
+    concluido: false,
+    streak: 0,
   },
   {
-    id: "2",
-    title: "Assistir anúncio patrocinado",
-    description: "Assista a um anúncio completo para ganhar tokens",
-    category: "daily",
-    difficulty: "easy",
-    reward: 25,
-    billionReward: 5,
-    progress: 0,
-    target: 1,
-    completed: false,
-    type: "educational",
-  },
-  {
-    id: "3",
-    title: "Economizar 20% da renda",
-    description: "Mantenha 20% da sua renda mensal em poupança",
-    category: "monthly",
-    difficulty: "hard",
-    reward: 500,
-    billionReward: 100,
-    progress: 15,
-    target: 20,
-    completed: false,
-    type: "financial",
-  },
-  {
-    id: "4",
-    title: "Participar de networking",
-    description: "Participe de um evento de networking do seu grupo",
-    category: "weekly",
-    difficulty: "medium",
-    reward: 200,
-    billionReward: 50,
-    progress: 0,
-    target: 1,
-    completed: false,
-    type: "social",
-  },
-  {
-    id: "5",
-    title: "Exercitar-se por 30 minutos",
-    description: "Pratique exercícios físicos por pelo menos 30 minutos",
-    category: "daily",
-    difficulty: "medium",
-    reward: 75,
+    id: "meta-economia",
+    titulo: "Definir Meta de Economia",
+    descricao: "Estabeleça quanto quer economizar hoje",
+    icon: "🎯",
+    xpReward: 75,
     billionReward: 15,
-    progress: 0,
-    target: 1,
-    completed: false,
-    type: "health",
+    categoria: "financeiro",
+    concluido: false,
+    streak: 0,
+  },
+  {
+    id: "estudar-investimentos",
+    titulo: "Estudar Investimentos",
+    descricao: "Dedique 15min para aprender sobre investimentos",
+    icon: "📚",
+    xpReward: 100,
+    billionReward: 20,
+    categoria: "educacao",
+    concluido: false,
+    streak: 0,
+  },
+  {
+    id: "aprendizado-diario",
+    titulo: "Aprendizado Diário",
+    descricao: "Leia um artigo ou assista um vídeo educativo",
+    icon: "🧠",
+    xpReward: 80,
+    billionReward: 16,
+    categoria: "educacao",
+    concluido: false,
+    streak: 0,
+  },
+  {
+    id: "networking",
+    titulo: "Networking",
+    descricao: "Interaja com a comunidade ou faça uma conexão",
+    icon: "🤝",
+    xpReward: 60,
+    billionReward: 12,
+    categoria: "social",
+    concluido: false,
+    streak: 0,
+  },
+  {
+    id: "gratidao",
+    titulo: "Gratidão",
+    descricao: "Reflita sobre 3 coisas pelas quais é grato",
+    icon: "🙏",
+    xpReward: 40,
+    billionReward: 8,
+    categoria: "mindset",
+    concluido: false,
+    streak: 0,
   },
 ]
 
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    type: "reward",
-    amount: 100,
-    currency: "BILLION",
-    description: "Recompensa por completar missão diária",
-    status: "completed",
-    createdAt: "2024-01-20T10:30:00Z",
-  },
-  {
-    id: "2",
-    type: "fee",
-    amount: 297,
-    currency: "BILLION",
-    description: "Mensalidade grupo MAGNATA",
-    status: "completed",
-    createdAt: "2024-01-15T09:00:00Z",
-  },
-  {
-    id: "3",
-    type: "deposit",
-    amount: 1000,
-    currency: "BILLION",
-    description: "Depósito via PIX",
-    status: "completed",
-    createdAt: "2024-01-10T14:20:00Z",
-  },
-]
+// Gerar dados históricos de preço do token
+const generateTokenPrices = (): TokenPrice[] => {
+  const prices: TokenPrice[] = []
+  let currentPrice = 1.0
+  const now = new Date()
 
-const mockCompetitions: Competition[] = [
-  {
-    id: "1",
-    title: "Desafio de Economia Mensal",
-    description: "Quem conseguir economizar mais percentualmente ganha",
-    type: "individual",
-    startDate: "2024-01-01",
-    endDate: "2024-01-31",
-    prize: 10000,
-    participants: 1250,
-    status: "active",
-  },
-  {
-    id: "2",
-    title: "Batalha dos Grupos",
-    description: "Competição entre grupos por maior crescimento médio",
-    type: "group",
-    startDate: "2024-01-15",
-    endDate: "2024-02-15",
-    prize: 50000,
-    participants: 6,
-    status: "active",
-  },
-]
+  for (let i = 30; i >= 0; i--) {
+    const timestamp = new Date(now.getTime() - i * 24 * 60 * 60 * 1000).toISOString()
+    const volatility = (Math.random() - 0.5) * 0.1
+    currentPrice = Math.max(0.5, currentPrice * (1 + volatility))
+
+    prices.push({
+      timestamp,
+      price: Number(currentPrice.toFixed(4)),
+      volume: Math.floor(Math.random() * 100000) + 50000,
+    })
+  }
+
+  return prices
+}
+
+// Gerar usuários fictícios para ranking
+const generateMockUsers = (): User[] => {
+  const names = [
+    "Ana Silva",
+    "Carlos Santos",
+    "Maria Oliveira",
+    "João Pereira",
+    "Fernanda Costa",
+    "Ricardo Lima",
+    "Juliana Alves",
+    "Pedro Rodrigues",
+    "Camila Ferreira",
+    "Lucas Martins",
+    "Beatriz Souza",
+    "Rafael Carvalho",
+    "Larissa Barbosa",
+    "Thiago Nascimento",
+    "Gabriela Ramos",
+  ]
+
+  return names.map((name, index) => ({
+    id: `user-${index + 1}`,
+    name,
+    email: `${name.toLowerCase().replace(" ", ".")}@email.com`,
+    patrimonio: Math.floor(Math.random() * 500000) + 10000,
+    billionTokens: Math.floor(Math.random() * 5000) + 500,
+    nivel: Math.floor(Math.random() * 30) + 1,
+    xp: Math.floor(Math.random() * 10000) + 1000,
+    streak: Math.floor(Math.random() * 100),
+    posicaoRanking: index + 2,
+    joiaAtual: ["Bronze", "Prata", "Ouro", "Platina", "Diamante"][Math.floor(Math.random() * 5)] as any,
+    badges: [],
+    habitosConcluidos: [],
+    joinedAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+    lastLogin: new Date().toISOString(),
+    indicacoes: Math.floor(Math.random() * 20),
+    totalInvestido: Math.floor(Math.random() * 100000) + 5000,
+  }))
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [missions] = useState<Mission[]>(mockMissions)
-  const [groups] = useState<Group[]>(mockGroups)
-  const [transactions] = useState<Transaction[]>(mockTransactions)
-  const [competitions] = useState<Competition[]>(mockCompetitions)
+  const [habitos, setHabitos] = useState<Habito[]>(mockHabitos)
+  const [joias] = useState<Joia[]>(mockJoias)
+  const [tokenPrices] = useState<TokenPrice[]>(generateTokenPrices())
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [ranking] = useState<User[]>(generateMockUsers())
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const isSandboxMode = true
+
+  const communityStats: CommunityStats = {
+    usuariosOnline: 1247,
+    volumeNegociado: 2847392,
+    totalAportado: 15847293,
+    maiorAporteHoje: 50000,
+    crescimentoSemanal: 12.5,
+  }
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("desafio-bilionario-user")
+    const savedUser = localStorage.getItem("julius-invest-user")
     if (savedUser) {
       const userData = JSON.parse(savedUser)
       setUser(userData)
@@ -315,44 +321,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (email && password) {
       const userData: User = {
         id: "1",
-        name: "Alexandre Silva",
+        name: "Julius Investidor",
         email,
-        avatar: "/placeholder.svg?height=100&width=100&text=AS",
-        patrimonio: 150000,
-        meta12meses: 300000,
-        grupo: "MAGNATA",
-        nivel: 12,
-        xp: 8750,
-        billionTokens: 2500,
-        streak: 15,
-        posicaoRanking: 8,
+        avatar: "/placeholder.svg?height=100&width=100&text=JI",
+        patrimonio: 100000,
+        billionTokens: 1250,
+        nivel: 8,
+        xp: 3420,
+        streak: 12,
+        posicaoRanking: 1,
+        joiaAtual: "Ouro",
         badges: [
           {
-            id: "1",
-            name: "Primeiro Login",
-            description: "Bem-vindo à plataforma",
+            id: "welcome",
+            name: "Bem-vindo",
+            description: "Primeiro acesso à plataforma",
             icon: "🎉",
             rarity: "common",
-            unlockedAt: "2024-01-01",
+            unlockedAt: new Date().toISOString(),
           },
           {
-            id: "2",
-            name: "Magnata",
-            description: "Alcançou o grupo Magnata",
-            icon: "💎",
-            rarity: "epic",
-            unlockedAt: "2024-01-10",
+            id: "streak-7",
+            name: "Disciplinado",
+            description: "Manteve streak por 7 dias",
+            icon: "🔥",
+            rarity: "rare",
+            unlockedAt: new Date().toISOString(),
           },
         ],
-        missoesConcluidas: ["1", "2"],
-        kycStatus: "verified",
-        isVip: true,
+        habitosConcluidos: [],
         joinedAt: "2024-01-01",
         lastLogin: new Date().toISOString(),
+        indicacoes: 5,
+        totalInvestido: 75000,
       }
       setUser(userData)
       setIsAuthenticated(true)
-      localStorage.setItem("desafio-bilionario-user", JSON.stringify(userData))
+      localStorage.setItem("julius-invest-user", JSON.stringify(userData))
       return true
     }
     return false
@@ -363,14 +368,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: Date.now().toString(),
       name: userData.name,
       email: userData.email,
-      patrimonio: userData.patrimonio,
-      meta12meses: userData.meta12meses,
-      grupo: "INICIANTE",
+      patrimonio: 100000, // Valor inicial sandbox
+      billionTokens: 1250, // Tokens iniciais
       nivel: 1,
       xp: 0,
-      billionTokens: 100, // Bônus de boas-vindas
       streak: 0,
       posicaoRanking: 999,
+      joiaAtual: "Bronze",
       badges: [
         {
           id: "welcome",
@@ -381,37 +385,143 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           unlockedAt: new Date().toISOString(),
         },
       ],
-      missoesConcluidas: [],
-      kycStatus: "pending",
-      isVip: false,
+      habitosConcluidos: [],
       joinedAt: new Date().toISOString(),
       lastLogin: new Date().toISOString(),
+      indicacoes: 0,
+      totalInvestido: 0,
     }
     setUser(newUser)
     setIsAuthenticated(true)
-    localStorage.setItem("desafio-bilionario-user", JSON.stringify(newUser))
+    localStorage.setItem("julius-invest-user", JSON.stringify(newUser))
     return true
   }
 
   const logout = () => {
     setUser(null)
     setIsAuthenticated(false)
-    localStorage.removeItem("desafio-bilionario-user")
+    localStorage.removeItem("julius-invest-user")
   }
 
-  const completeMission = (missionId: string) => {
+  const completeHabito = (habitoId: string) => {
     if (user) {
-      const mission = missions.find((m) => m.id === missionId)
-      if (mission) {
+      const habito = habitos.find((h) => h.id === habitoId)
+      if (habito && !habito.concluido) {
+        // Atualizar hábito
+        setHabitos((prev) => prev.map((h) => (h.id === habitoId ? { ...h, concluido: true, streak: h.streak + 1 } : h)))
+
+        // Atualizar usuário
         const updatedUser = {
           ...user,
-          xp: user.xp + mission.reward,
-          billionTokens: user.billionTokens + mission.billionReward,
-          missoesConcluidas: [...user.missoesConcluidas, missionId],
+          xp: user.xp + habito.xpReward,
+          billionTokens: user.billionTokens + habito.billionReward,
+          habitosConcluidos: [...user.habitosConcluidos, habitoId],
         }
         setUser(updatedUser)
-        localStorage.setItem("desafio-bilionario-user", JSON.stringify(updatedUser))
+        localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+
+        // Adicionar transação
+        const transaction: Transaction = {
+          id: Date.now().toString(),
+          type: "habit",
+          amount: habito.billionReward,
+          description: `Hábito completado: ${habito.titulo}`,
+          timestamp: new Date().toISOString(),
+        }
+        setTransactions((prev) => [transaction, ...prev])
       }
+    }
+  }
+
+  const buyJoia = async (joiaId: string): Promise<boolean> => {
+    if (user) {
+      const joia = joias.find((j) => j.id === joiaId)
+      if (joia && user.billionTokens >= joia.preco) {
+        const updatedUser = {
+          ...user,
+          billionTokens: user.billionTokens - joia.preco,
+          joiaAtual: joia.nome as any,
+        }
+        setUser(updatedUser)
+        localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+        return true
+      }
+    }
+    return false
+  }
+
+  const sellJoia = async (joiaId: string): Promise<boolean> => {
+    if (user) {
+      const joia = joias.find((j) => j.id === joiaId)
+      if (joia) {
+        const updatedUser = {
+          ...user,
+          billionTokens: user.billionTokens + joia.precoVenda,
+          joiaAtual: "Bronze",
+        }
+        setUser(updatedUser)
+        localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+        return true
+      }
+    }
+    return false
+  }
+
+  const buyTokens = async (amount: number): Promise<boolean> => {
+    if (user) {
+      const currentPrice = tokenPrices[tokenPrices.length - 1]?.price || 1
+      const cost = amount * currentPrice
+
+      if (user.patrimonio >= cost) {
+        const updatedUser = {
+          ...user,
+          patrimonio: user.patrimonio - cost,
+          billionTokens: user.billionTokens + amount,
+        }
+        setUser(updatedUser)
+        localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+        return true
+      }
+    }
+    return false
+  }
+
+  const sellTokens = async (amount: number): Promise<boolean> => {
+    if (user && user.billionTokens >= amount) {
+      const currentPrice = tokenPrices[tokenPrices.length - 1]?.price || 1
+      const revenue = amount * currentPrice
+
+      const updatedUser = {
+        ...user,
+        patrimonio: user.patrimonio + revenue,
+        billionTokens: user.billionTokens - amount,
+      }
+      setUser(updatedUser)
+      localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+      return true
+    }
+    return false
+  }
+
+  const resetAccount = () => {
+    if (user) {
+      const resetUser = {
+        ...user,
+        patrimonio: 100000,
+        billionTokens: 1250,
+        nivel: 1,
+        xp: 0,
+        streak: 0,
+        joiaAtual: "Bronze" as any,
+        habitosConcluidos: [],
+        totalInvestido: 0,
+      }
+      setUser(resetUser)
+      localStorage.setItem("julius-invest-user", JSON.stringify(resetUser))
+
+      // Reset hábitos
+      setHabitos(mockHabitos.map((h) => ({ ...h, concluido: false, streak: 0 })))
+      setTransactions([])
     }
   }
 
@@ -419,38 +529,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, patrimonio: novoPatrimonio }
       setUser(updatedUser)
-      localStorage.setItem("desafio-bilionario-user", JSON.stringify(updatedUser))
+      localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
     }
-  }
-
-  const purchaseTokens = async (amount: number): Promise<boolean> => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        billionTokens: user.billionTokens + amount,
-      }
-      setUser(updatedUser)
-      localStorage.setItem("desafio-bilionario-user", JSON.stringify(updatedUser))
-      return true
-    }
-    return false
-  }
-
-  const joinGroup = async (groupId: string): Promise<boolean> => {
-    if (user) {
-      const group = groups.find((g) => g.id === groupId)
-      if (group && user.billionTokens >= group.entryFee) {
-        const updatedUser = {
-          ...user,
-          grupo: group.name,
-          billionTokens: user.billionTokens - group.entryFee,
-        }
-        setUser(updatedUser)
-        localStorage.setItem("desafio-bilionario-user", JSON.stringify(updatedUser))
-        return true
-      }
-    }
-    return false
   }
 
   return (
@@ -458,18 +538,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         setUser,
-        missions,
-        groups,
+        habitos,
+        joias,
+        tokenPrices,
         transactions,
-        competitions,
+        communityStats,
+        ranking,
         isAuthenticated,
+        isSandboxMode,
         login,
         register,
         logout,
-        completeMission,
+        completeHabito,
+        buyJoia,
+        sellJoia,
+        buyTokens,
+        sellTokens,
+        resetAccount,
         updatePatrimonio,
-        purchaseTokens,
-        joinGroup,
       }}
     >
       {children}
