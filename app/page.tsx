@@ -4,15 +4,30 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Crown, Target, Users, Trophy, Star, ArrowRight, CheckCircle } from "lucide-react"
+import {
+  Crown,
+  Users,
+  Trophy,
+  Star,
+  ArrowRight,
+  CheckCircle,
+  Play,
+  Zap,
+  Shield,
+  Target,
+  Coins,
+  Award,
+  Menu,
+  X,
+} from "lucide-react"
 import Link from "next/link"
 import { useApp } from "@/contexts/app-context"
 import { useRouter } from "next/navigation"
 
 export default function LandingPage() {
-  const { isAuthenticated } = useApp()
+  const { isAuthenticated, groups } = useApp()
   const router = useRouter()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [email, setEmail] = useState("")
 
   const handleGetStarted = () => {
@@ -23,238 +38,400 @@ export default function LandingPage() {
     }
   }
 
-  const grupos = [
-    { nome: "Iniciante", icon: "🥉", range: "R$ 0-10k", cor: "bg-amber-100 text-amber-800" },
-    { nome: "Construtor", icon: "🥈", range: "R$ 10k-50k", cor: "bg-gray-100 text-gray-800" },
-    { nome: "Acelerador", icon: "🥇", range: "R$ 50k-200k", cor: "bg-yellow-100 text-yellow-800" },
-    { nome: "Investidor", icon: "💎", range: "R$ 200k-1M", cor: "bg-blue-100 text-blue-800" },
-    { nome: "Magnata", icon: "👑", range: "R$ 1M-10M", cor: "bg-purple-100 text-purple-800" },
-    { nome: "Titã", icon: "🏆", range: "R$ 10M+", cor: "bg-red-100 text-red-800" },
-  ]
-
   const depoimentos = [
     {
-      nome: "Ana Silva",
-      cargo: "Empresária",
-      texto: "Em 6 meses saí do grupo Iniciante para Construtor! As missões me ajudaram a criar disciplina financeira.",
-      avatar: "👩‍💼",
+      name: "Carlos Mendes",
+      role: "Empresário - Grupo ELITE",
+      content: "Em 8 meses saí do grupo CRESCENTE para ELITE. O networking aqui é incomparável!",
+      avatar: "/placeholder.svg?height=60&width=60&text=CM",
+      result: "+340% patrimônio",
     },
     {
-      nome: "Carlos Santos",
-      cargo: "Desenvolvedor",
-      texto: "O sistema de ranking me motivou a investir mais. Já estou no top 10 do meu grupo!",
-      avatar: "👨‍💻",
+      name: "Ana Rodrigues",
+      role: "Investidora - Grupo MAGNATA",
+      content: "As oportunidades VIP que recebo aqui já pagaram minha mensalidade por anos.",
+      avatar: "/placeholder.svg?height=60&width=60&text=AR",
+      result: "R$ 2.3M em deals",
     },
     {
-      nome: "Maria Oliveira",
-      cargo: "Professora",
-      texto: "Nunca pensei que aprender sobre finanças poderia ser tão divertido. Recomendo para todos!",
-      avatar: "👩‍🏫",
+      name: "Roberto Silva",
+      role: "CEO - Grupo TITÃ",
+      content: "O acesso a investimentos exclusivos transformou completamente meu portfólio.",
+      avatar: "/placeholder.svg?height=60&width=60&text=RS",
+      result: "R$ 15M+ patrimônio",
+    },
+  ]
+
+  const features = [
+    {
+      icon: <Target className="h-8 w-8" />,
+      title: "Missões Gamificadas",
+      description: "Complete desafios diários e ganhe $BILLION tokens",
+    },
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: "Networking Premium",
+      description: "Conecte-se com investidores do seu nível patrimonial",
+    },
+    {
+      icon: <Trophy className="h-8 w-8" />,
+      title: "Competições Épicas",
+      description: "Dispute prêmios milionários em torneios mensais",
+    },
+    {
+      icon: <Coins className="h-8 w-8" />,
+      title: "Sistema de Tokens",
+      description: "Ganhe e use $BILLION tokens em todo o ecossistema",
     },
   ]
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Crown className="h-8 w-8 text-[#1a237e]" />
-            <span className="text-2xl font-bold text-[#1a237e]">DESAFIO BILIONÁRIO</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="#como-funciona" className="text-gray-600 hover:text-[#1a237e] transition-colors">
-              Como Funciona
-            </a>
-            <a href="#grupos" className="text-gray-600 hover:text-[#1a237e] transition-colors">
-              Grupos
-            </a>
-            <a href="#depoimentos" className="text-gray-600 hover:text-[#1a237e] transition-colors">
-              Depoimentos
-            </a>
-            {isAuthenticated ? (
-              <Button onClick={() => router.push("/dashboard")} className="bg-[#ff5722] hover:bg-[#e64a19]">
-                Ir para Dashboard
-              </Button>
-            ) : (
-              <Link href="/auth/login">
-                <Button
-                  variant="outline"
-                  className="border-[#1a237e] text-[#1a237e] hover:bg-[#1a237e] hover:text-white bg-transparent"
-                >
-                  Entrar
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header Premium */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+                <Crown className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gradient">DESAFIO BILIONÁRIO</span>
+            </div>
+
+            {/* Desktop Menu */}
+            <nav className="hidden lg:flex items-center space-x-8">
+              <a href="#inicio" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                Início
+              </a>
+              <a href="#como-funciona" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                Como Funciona
+              </a>
+              <a href="#grupos" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                Grupos
+              </a>
+              <a href="#precos" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                Preços
+              </a>
+              <a href="#depoimentos" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                Depoimentos
+              </a>
+            </nav>
+
+            <div className="hidden lg:flex items-center space-x-4">
+              {isAuthenticated ? (
+                <Button onClick={() => router.push("/dashboard")} className="btn-premium text-white font-semibold">
+                  Ir para Dashboard
                 </Button>
-              </Link>
-            )}
+              ) : (
+                <>
+                  <Link href="/auth/login">
+                    <Button variant="ghost" className="font-semibold">
+                      Entrar
+                    </Button>
+                  </Link>
+                  <Button onClick={handleGetStarted} className="btn-premium text-white font-semibold">
+                    COMEÇAR AGORA
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t border-gray-200">
+              <nav className="flex flex-col space-y-4 mt-4">
+                <a href="#inicio" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                  Início
+                </a>
+                <a href="#como-funciona" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                  Como Funciona
+                </a>
+                <a href="#grupos" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                  Grupos
+                </a>
+                <a href="#precos" className="text-gray-700 hover:text-primary transition-colors font-medium">
+                  Preços
+                </a>
+                <div className="flex flex-col space-y-2 pt-4">
+                  <Link href="/auth/login">
+                    <Button variant="outline" className="w-full bg-transparent">
+                      Entrar
+                    </Button>
+                  </Link>
+                  <Button onClick={handleGetStarted} className="btn-premium text-white w-full">
+                    COMEÇAR AGORA
+                  </Button>
+                </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="gradient-bg text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-4xl mx-auto">
-            <Badge className="mb-6 bg-[#ff5722] text-white px-4 py-2 text-lg">
-              🚀 Mais de 10.000 pessoas já estão no desafio!
+      {/* Hero Section Premium */}
+      <section id="inicio" className="relative py-20 lg:py-32 overflow-hidden">
+        <div className="absolute inset-0 gradient-hero opacity-10"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto text-center">
+            <Badge className="mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 text-lg font-semibold animate-pulse-glow">
+              🚀 Mais de 27.000 membros ativos gerando riqueza!
             </Badge>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Transforme sua vida financeira em um
-              <span className="gradient-text block mt-2">jogo épico</span>
+
+            <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
+              Transforme Sua Vida Financeira
+              <span className="block text-gradient mt-2">em um Jogo</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
-              Junte-se a milhares de pessoas que estão construindo riqueza através de missões gamificadas, ranking
-              competitivo e uma comunidade que te apoia
+
+            <p className="text-xl lg:text-2xl mb-12 text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              Junte-se a milhares de pessoas que estão construindo riqueza através de{" "}
+              <span className="font-semibold text-primary">gamificação</span>,{" "}
+              <span className="font-semibold text-secondary">networking premium</span> e{" "}
+              <span className="font-semibold text-accent">competição saudável</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="bg-[#ff5722] hover:bg-[#e64a19] text-white px-8 py-4 text-xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="btn-premium text-white px-12 py-6 text-xl font-bold rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
-                COMEÇAR AGORA - GRÁTIS
-                <ArrowRight className="ml-2 h-6 w-6" />
+                ENTRAR NO GRUPO DO MILHÃO
+                <Crown className="ml-3 h-6 w-6" />
               </Button>
-              <div className="flex items-center text-blue-100">
-                <CheckCircle className="h-5 w-5 mr-2" />
-                <span>100% Gratuito • Sem cartão de crédito</span>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="px-8 py-6 text-lg font-semibold rounded-2xl border-2 hover:bg-gray-50 bg-transparent"
+              >
+                <Play className="mr-2 h-5 w-5" />
+                ASSISTIR DEMO
+              </Button>
+            </div>
+
+            {/* Stats Premium */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary mb-2">27k+</div>
+                <div className="text-gray-600 font-medium">Membros Ativos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-secondary mb-2">R$ 2.8B</div>
+                <div className="text-gray-600 font-medium">Patrimônio Gerenciado</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-success mb-2">847%</div>
+                <div className="text-gray-600 font-medium">ROI Médio Anual</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-accent mb-2">98.7%</div>
+                <div className="text-gray-600 font-medium">Taxa de Sucesso</div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#ff5722]">10k+</div>
-                <div className="text-blue-100">Usuários Ativos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#ff5722]">R$ 50M+</div>
-                <div className="text-blue-100">Patrimônio Criado</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#ff5722]">95%</div>
-                <div className="text-blue-100">Taxa de Sucesso</div>
-              </div>
-            </div>
+          </div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 animate-float">
+          <div className="w-20 h-20 gradient-secondary rounded-full opacity-20"></div>
+        </div>
+        <div className="absolute bottom-20 right-10 animate-float" style={{ animationDelay: "1s" }}>
+          <div className="w-16 h-16 gradient-accent rounded-full opacity-20"></div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Por que escolher o <span className="text-gradient">Desafio Bilionário</span>?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              A única plataforma que combina gamificação, networking premium e oportunidades exclusivas de investimento
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="card-hover card-premium text-center border-0">
+                <CardContent className="p-8">
+                  <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 text-white">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Como Funciona */}
-      <section id="como-funciona" className="py-20 bg-gray-50">
+      <section id="como-funciona" className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1a237e] mb-4">Como Funciona</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Um sistema simples e eficaz que transforma sua jornada financeira em uma experiência gamificada
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">Como Funciona</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              4 passos simples para transformar sua vida financeira
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center border-2 hover:border-[#ff5722] transition-all duration-300 hover:shadow-xl">
-              <CardHeader>
-                <div className="w-16 h-16 bg-[#ff5722] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-[#1a237e]">1. Complete Missões</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Receba missões diárias, semanais e mensais personalizadas para seu perfil financeiro. Cada missão
-                  concluída te dá XP e te aproxima dos seus objetivos.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:border-[#ff5722] transition-all duration-300 hover:shadow-xl">
-              <CardHeader>
-                <div className="w-16 h-16 bg-[#ff5722] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Trophy className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-[#1a237e]">2. Suba no Ranking</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Compete com pessoas do seu nível patrimonial. O ranking é baseado no crescimento percentual, não no
-                  valor absoluto - todos têm chances iguais!
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:border-[#ff5722] transition-all duration-300 hover:shadow-xl">
-              <CardHeader>
-                <div className="w-16 h-16 bg-[#ff5722] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-[#1a237e]">3. Evolua de Grupo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Comece como Iniciante e evolua até Titã. Cada grupo tem benefícios exclusivos, mentorias especiais e
-                  uma comunidade engajada.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
-      {/* Grupos por Patrimônio */}
-      <section id="grupos" className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1a237e] mb-4">Grupos por Patrimônio</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Encontre seu grupo e compete com pessoas do seu nível. A jornada é justa para todos!
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {grupos.map((grupo, index) => (
-              <Card
-                key={index}
-                className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-2"
-              >
-                <CardHeader className="pb-2">
-                  <div className="text-4xl mb-2">{grupo.icon}</div>
-                  <CardTitle className="text-lg text-[#1a237e]">{grupo.nome}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Badge className={`${grupo.cor} text-sm`}>{grupo.range}</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">
-              💡 <strong>Dica:</strong> O ranking é baseado no crescimento percentual, não no valor absoluto!
-            </p>
-            <p className="text-sm text-gray-500">
-              Isso significa que alguém que cresce de R$ 1.000 para R$ 1.500 (50%) fica à frente de quem cresce de R$
-              100.000 para R$ 120.000 (20%)
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Depoimentos */}
-      <section id="depoimentos" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1a237e] mb-4">O que nossos usuários dizem</h2>
-            <p className="text-xl text-gray-600">Histórias reais de transformação financeira</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {depoimentos.map((depoimento, index) => (
-              <Card key={index} className="hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-3xl">{depoimento.avatar}</div>
-                    <div>
-                      <CardTitle className="text-[#1a237e]">{depoimento.nome}</CardTitle>
-                      <CardDescription>{depoimento.cargo}</CardDescription>
+          <div className="grid lg:grid-cols-4 gap-8">
+            {[
+              {
+                step: "01",
+                title: "Escolha seu Grupo",
+                description: "Selecione o grupo baseado no seu patrimônio atual",
+                icon: <Users className="h-8 w-8" />,
+              },
+              {
+                step: "02",
+                title: "Pague a Joia",
+                description: "Invista em $BILLION tokens e pague a mensalidade",
+                icon: <Coins className="h-8 w-8" />,
+              },
+              {
+                step: "03",
+                title: "Complete Missões",
+                description: "Ganhe XP e tokens completando desafios diários",
+                icon: <Target className="h-8 w-8" />,
+              },
+              {
+                step: "04",
+                title: "Ganhe Prêmios",
+                description: "Receba recompensas, networking e oportunidades VIP",
+                icon: <Trophy className="h-8 w-8" />,
+              },
+            ].map((item, index) => (
+              <Card key={index} className="card-hover card-premium border-0 relative">
+                <CardContent className="p-8 text-center">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="w-8 h-8 gradient-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {item.step}
                     </div>
                   </div>
+                  <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 text-white mt-4">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{item.title}</h3>
+                  <p className="text-gray-600">{item.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Grupos Premium */}
+      <section id="grupos" className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Escolha seu <span className="text-gradient">Grupo</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Cada grupo oferece benefícios exclusivos baseados no seu nível patrimonial
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {groups.map((group, index) => (
+              <Card
+                key={group.id}
+                className={`card-hover border-0 relative overflow-hidden ${
+                  index === 2 ? "ring-4 ring-yellow-400 scale-105" : ""
+                }`}
+              >
+                {index === 2 && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center py-2 font-bold text-sm">
+                    MAIS POPULAR
+                  </div>
+                )}
+                <div className={`h-2 bg-gradient-to-r ${group.color}`}></div>
+                <CardHeader className="text-center pb-4">
+                  <div className="text-4xl mb-4">{group.icon}</div>
+                  <CardTitle className="text-2xl font-bold text-gray-900">{group.name}</CardTitle>
+                  <CardDescription className="text-lg">
+                    Patrimônio mínimo: <span className="font-bold">R$ {group.minWealth.toLocaleString()}</span>
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 italic">"{depoimento.texto}"</p>
-                  <div className="flex mt-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-[#ff5722] text-[#ff5722]" />
+                <CardContent className="space-y-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {group.entryFee.toLocaleString()} $BILLION
+                    </div>
+                    <div className="text-gray-600">Joia de entrada</div>
+                    <div className="text-lg font-semibold text-secondary mt-2">{group.monthlyFee} $BILLION/mês</div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-gray-900">Benefícios Exclusivos:</h4>
+                    {group.benefits.map((benefit, i) => (
+                      <div key={i} className="flex items-center text-gray-600">
+                        <CheckCircle className="h-4 w-4 text-success mr-3 flex-shrink-0" />
+                        <span>{benefit}</span>
+                      </div>
                     ))}
+                  </div>
+
+                  <div className="text-center text-sm text-gray-500">
+                    {group.memberCount.toLocaleString()} membros ativos
+                  </div>
+
+                  <Button className="w-full btn-premium text-white font-semibold">
+                    ENTRAR NO GRUPO
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Depoimentos Premium */}
+      <section id="depoimentos" className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Histórias de <span className="text-gradient">Sucesso</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Veja como nossos membros transformaram suas vidas financeiras
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {depoimentos.map((depoimento, index) => (
+              <Card key={index} className="card-hover card-premium border-0">
+                <CardContent className="p-8">
+                  <div className="flex items-center mb-6">
+                    <img
+                      src={depoimento.avatar || "/placeholder.svg"}
+                      alt={depoimento.name}
+                      className="w-16 h-16 rounded-full mr-4"
+                    />
+                    <div>
+                      <h4 className="font-bold text-gray-900">{depoimento.name}</h4>
+                      <p className="text-gray-600 text-sm">{depoimento.role}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-6 italic">"{depoimento.content}"</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <Badge className="bg-success text-white">{depoimento.result}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -263,90 +440,78 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1a237e] mb-4">Perguntas Frequentes</h2>
-          </div>
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left">Como funciona o sistema de pontos?</AccordionTrigger>
-                <AccordionContent>
-                  Você ganha XP (pontos de experiência) completando missões. Missões diárias dão 50 XP, semanais 100-200
-                  XP, e mensais 300-500 XP. Quanto mais XP, maior sua posição no ranking do seu grupo.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left">É realmente gratuito?</AccordionTrigger>
-                <AccordionContent>
-                  Sim! O Desafio Bilionário é 100% gratuito. Temos planos premium opcionais com mentorias exclusivas e
-                  ferramentas avançadas, mas você pode usar todas as funcionalidades principais sem pagar nada.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left">Como são definidos os grupos?</AccordionTrigger>
-                <AccordionContent>
-                  Os grupos são baseados no seu patrimônio atual declarado. Você compete apenas com pessoas do seu
-                  nível, tornando a competição justa. Conforme seu patrimônio cresce, você evolui para grupos
-                  superiores.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left">Preciso compartilhar dados bancários?</AccordionTrigger>
-                <AccordionContent>
-                  Não! Você apenas declara seu patrimônio atual e metas. Não pedimos acesso a contas bancárias ou dados
-                  sensíveis. Tudo é baseado na sua autodeclaração e comprometimento pessoal.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left">Quanto tempo preciso dedicar por dia?</AccordionTrigger>
-                <AccordionContent>
-                  Apenas 10-15 minutos por dia! As missões são projetadas para se encaixar na sua rotina. O importante é
-                  a consistência, não o tempo gasto.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+      {/* CTA Final Premium */}
+      <section className="py-20 gradient-hero text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl lg:text-6xl font-bold mb-8">
+              Pronto para se tornar um
+              <span className="block text-yellow-300 mt-2">BILIONÁRIO?</span>
+            </h2>
+            <p className="text-xl lg:text-2xl mb-12 opacity-90 leading-relaxed">
+              Junte-se a milhares de pessoas que já estão construindo riqueza de forma gamificada e inteligente
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+              <Button
+                onClick={handleGetStarted}
+                size="lg"
+                className="bg-yellow-500 hover:bg-yellow-400 text-black px-12 py-6 text-2xl font-bold rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300"
+              >
+                COMEÇAR AGORA - GRÁTIS
+                <Zap className="ml-3 h-8 w-8" />
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm opacity-80">
+              <div className="flex items-center">
+                <Shield className="h-4 w-4 mr-2" />
+                <span>100% Seguro</span>
+              </div>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                <span>Sem cartão de crédito</span>
+              </div>
+              <div className="flex items-center">
+                <Award className="h-4 w-4 mr-2" />
+                <span>Garantia de 30 dias</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section className="py-20 gradient-bg text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">Pronto para transformar sua vida financeira?</h2>
-          <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-            Junte-se a milhares de pessoas que já estão construindo riqueza de forma gamificada e divertida
-          </p>
-          <Button
-            onClick={handleGetStarted}
-            size="lg"
-            className="bg-[#ff5722] hover:bg-[#e64a19] text-white px-12 py-6 text-2xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300"
-          >
-            COMEÇAR AGORA - GRÁTIS
-            <Crown className="ml-3 h-8 w-8" />
-          </Button>
-          <p className="mt-4 text-blue-100">
-            ✅ Cadastro em 2 minutos • ✅ Sem cartão de crédito • ✅ Cancele quando quiser
-          </p>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#1a237e] text-white py-12">
+      {/* Footer Premium */}
+      <footer className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Crown className="h-6 w-6" />
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
                 <span className="text-xl font-bold">DESAFIO BILIONÁRIO</span>
               </div>
-              <p className="text-blue-200">Transformando vidas através da gamificação financeira</p>
+              <p className="text-gray-400 mb-6">
+                A maior plataforma de gamificação financeira e networking premium do Brasil
+              </p>
+              <div className="flex space-x-4">
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                  <span className="text-sm font-bold">IG</span>
+                </div>
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                  <span className="text-sm font-bold">YT</span>
+                </div>
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                  <span className="text-sm font-bold">LI</span>
+                </div>
+              </div>
             </div>
+
             <div>
-              <h4 className="font-bold mb-4">Produto</h4>
-              <ul className="space-y-2 text-blue-200">
+              <h4 className="font-bold mb-6">Produto</h4>
+              <ul className="space-y-3 text-gray-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
                     Como Funciona
@@ -359,19 +524,20 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    Missões
+                    Preços
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    Ranking
+                    Marketplace
                   </a>
                 </li>
               </ul>
             </div>
+
             <div>
-              <h4 className="font-bold mb-4">Suporte</h4>
-              <ul className="space-y-2 text-blue-200">
+              <h4 className="font-bold mb-6">Suporte</h4>
+              <ul className="space-y-3 text-gray-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
                     Central de Ajuda
@@ -384,7 +550,7 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    FAQ
+                    Status
                   </a>
                 </li>
                 <li>
@@ -394,23 +560,46 @@ export default function LandingPage() {
                 </li>
               </ul>
             </div>
+
             <div>
-              <h4 className="font-bold mb-4">Redes Sociais</h4>
-              <div className="flex space-x-4">
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  Instagram
-                </a>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  YouTube
-                </a>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  LinkedIn
-                </a>
-              </div>
+              <h4 className="font-bold mb-6">Legal</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Termos de Uso
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Privacidade
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Cookies
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    LGPD
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
-          <div className="border-t border-blue-800 mt-8 pt-8 text-center text-blue-200">
-            <p>&copy; 2024 Desafio Bilionário. Todos os direitos reservados.</p>
+
+          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between">
+            <p className="text-gray-400 mb-4 md:mb-0">&copy; 2024 Desafio Bilionário. Todos os direitos reservados.</p>
+            <div className="flex items-center space-x-6 text-sm text-gray-400">
+              <div className="flex items-center">
+                <Shield className="h-4 w-4 mr-2" />
+                <span>SSL Seguro</span>
+              </div>
+              <div className="flex items-center">
+                <Award className="h-4 w-4 mr-2" />
+                <span>Certificado ISO</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
