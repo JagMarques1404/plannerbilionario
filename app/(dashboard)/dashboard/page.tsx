@@ -42,14 +42,6 @@ const performanceData = [
   { categoria: "Top 10%", valor: 35.8, cor: "#F59E0B" },
 ]
 
-const gastosData = [
-  { categoria: "Investimentos", valor: 45, cor: "#10B981" },
-  { categoria: "Moradia", valor: 25, cor: "#3B82F6" },
-  { categoria: "Alimentação", valor: 15, cor: "#F59E0B" },
-  { categoria: "Transporte", valor: 10, cor: "#EF4444" },
-  { categoria: "Outros", valor: 5, cor: "#8B5CF6" },
-]
-
 const feedAtividades = [
   {
     usuario: "Carlos M.",
@@ -124,12 +116,14 @@ const oportunidadesVip = [
 ]
 
 export default function DashboardPage() {
-  const { user, missions, completeMission } = useApp()
+  const { user, missions = [], completeMission } = useApp()
   const [selectedTab, setSelectedTab] = useState("overview")
 
   if (!user) return null
 
-  const missionsAtivas = missions.filter((m) => !m.completed).slice(0, 4)
+  // Verificação de segurança para missions
+  const missionsAtivas = missions?.filter((m) => !m.completed)?.slice(0, 4) || []
+
   const proximasMetas = [
     { titulo: "Alcançar R$ 200.000", progresso: 75, recompensa: "Upgrade para ELITE", cor: "bg-yellow-500" },
     { titulo: "Completar 20 missões", progresso: 65, recompensa: "Badge Disciplinado", cor: "bg-blue-500" },
@@ -369,36 +363,43 @@ export default function DashboardPage() {
                 <CardDescription>Complete para ganhar XP e $BILLION tokens</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {missionsAtivas.map((mission) => (
-                  <div key={mission.id} className="p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900 text-sm">{mission.title}</h4>
-                      <div className="flex space-x-2">
-                        <Badge className="bg-blue-500 text-white text-xs">+{mission.reward} XP</Badge>
-                        <Badge className="bg-yellow-500 text-white text-xs">+{mission.billionReward} $B</Badge>
+                {missionsAtivas.length > 0 ? (
+                  missionsAtivas.map((mission) => (
+                    <div key={mission.id} className="p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900 text-sm">{mission.title}</h4>
+                        <div className="flex space-x-2">
+                          <Badge className="bg-blue-500 text-white text-xs">+{mission.reward} XP</Badge>
+                          <Badge className="bg-yellow-500 text-white text-xs">+{mission.billionReward} $B</Badge>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3">{mission.description}</p>
+                      <div className="space-y-2">
+                        <Progress value={(mission.progress / mission.target) * 100} className="h-2" />
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">
+                            {mission.progress}/{mission.target}
+                          </span>
+                          {mission.progress === mission.target && (
+                            <Button
+                              size="sm"
+                              onClick={() => completeMission(mission.id)}
+                              className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Concluir
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <p className="text-gray-600 text-xs mb-3">{mission.description}</p>
-                    <div className="space-y-2">
-                      <Progress value={(mission.progress / mission.target) * 100} className="h-2" />
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">
-                          {mission.progress}/{mission.target}
-                        </span>
-                        {mission.progress === mission.target && (
-                          <Button
-                            size="sm"
-                            onClick={() => completeMission(mission.id)}
-                            className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg"
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Concluir
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Nenhuma missão ativa no momento</p>
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
 

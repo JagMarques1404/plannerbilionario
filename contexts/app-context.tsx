@@ -81,6 +81,19 @@ export interface CommunityStats {
   crescimentoSemanal: number
 }
 
+export interface Mission {
+  id: string
+  title: string
+  description: string
+  target: number
+  progress: number
+  reward: number
+  billionReward: number
+  completed: boolean
+  category: "financeiro" | "educacao" | "social" | "mindset"
+  deadline?: string
+}
+
 interface AppContextType {
   user: User | null
   setUser: (user: User | null) => void
@@ -102,6 +115,8 @@ interface AppContextType {
   sellTokens: (amount: number) => Promise<boolean>
   resetAccount: () => void
   updatePatrimonio: (novoPatrimonio: number) => void
+  missions: Mission[]
+  completeMission: (missionId: string) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -229,6 +244,53 @@ const mockHabitos: Habito[] = [
   },
 ]
 
+const mockMissions: Mission[] = [
+  {
+    id: "1",
+    title: "Primeira Compra de Tokens",
+    description: "Compre seus primeiros $BILLION tokens",
+    target: 1,
+    progress: 0,
+    reward: 100,
+    billionReward: 50,
+    completed: false,
+    category: "financeiro",
+  },
+  {
+    id: "2",
+    title: "Adquirir Joia Bronze",
+    description: "Compre sua primeira joia para subir de nível",
+    target: 1,
+    progress: 0,
+    reward: 200,
+    billionReward: 100,
+    completed: false,
+    category: "financeiro",
+  },
+  {
+    id: "3",
+    title: "Estudar por 7 dias",
+    description: "Complete o hábito de estudo por 7 dias consecutivos",
+    target: 7,
+    progress: 3,
+    reward: 500,
+    billionReward: 250,
+    completed: false,
+    category: "educacao",
+  },
+  {
+    id: "4",
+    title: "Alcançar Top 100",
+    description: "Entre no top 100 do ranking global",
+    target: 100,
+    progress: 47,
+    reward: 1000,
+    billionReward: 500,
+    completed: false,
+    category: "social",
+  },
+]
+
 // Gerar dados históricos de preço do token
 const generateTokenPrices = (): TokenPrice[] => {
   const prices: TokenPrice[] = []
@@ -299,6 +361,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ranking] = useState<User[]>(generateMockUsers())
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const isSandboxMode = true
+  const [missions, setMissions] = useState<Mission[]>(mockMissions)
 
   const communityStats: CommunityStats = {
     usuariosOnline: 1247,
@@ -533,6 +596,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const completeMission = (missionId: string) => {
+    if (user) {
+      const mission = missions.find((m) => m.id === missionId)
+      if (mission && !mission.completed) {
+        setMissions((prev) => prev.map((m) => (m.id === missionId ? { ...m, completed: true } : m)))
+
+        const updatedUser = {
+          ...user,
+          xp: user.xp + mission.reward,
+          billionTokens: user.billionTokens + mission.billionReward,
+        }
+        setUser(updatedUser)
+        localStorage.setItem("julius-invest-user", JSON.stringify(updatedUser))
+      }
+    }
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -556,6 +636,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sellTokens,
         resetAccount,
         updatePatrimonio,
+        missions,
+        completeMission,
       }}
     >
       {children}
