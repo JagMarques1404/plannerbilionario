@@ -1,95 +1,146 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle, Clock, Star, Zap } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { UserMission } from "@/lib/supabase"
+import { Trophy, Clock, Coins, Target, CheckCircle } from "lucide-react"
+
+interface Mission {
+  id: string
+  title: string
+  description: string
+  type: "daily" | "weekly" | "monthly" | "special"
+  difficulty: "easy" | "medium" | "hard"
+  xpReward: number
+  tokenReward: number
+  progress: number
+  maxProgress: number
+  isCompleted: boolean
+  deadline?: string
+  requirements: string[]
+}
 
 interface MissionCardProps {
-  mission: UserMission & {
-    title?: string
-    description?: string
-  }
+  mission: Mission
   onComplete?: (missionId: string) => void
 }
 
 export function MissionCard({ mission, onComplete }: MissionCardProps) {
-  const [isCompleting, setIsCompleting] = useState(false)
-
-  const handleComplete = async () => {
-    if (mission.completed_at || isCompleting) return
-
-    setIsCompleting(true)
-    try {
-      await onComplete?.(mission.id)
-    } finally {
-      setIsCompleting(false)
+  const getDifficultyColor = (difficulty: Mission["difficulty"]) => {
+    switch (difficulty) {
+      case "easy":
+        return "bg-green-100 text-green-800"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800"
+      case "hard":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
   }
 
-  const isCompleted = !!mission.completed_at
-  const progress = mission.progress || 0
+  const getTypeColor = (type: Mission["type"]) => {
+    switch (type) {
+      case "daily":
+        return "bg-blue-100 text-blue-800"
+      case "weekly":
+        return "bg-purple-100 text-purple-800"
+      case "monthly":
+        return "bg-orange-100 text-orange-800"
+      case "special":
+        return "bg-pink-100 text-pink-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const progressPercentage = (mission.progress / mission.maxProgress) * 100
 
   return (
-    <Card className={cn("transition-all duration-200 hover:shadow-md", isCompleted && "bg-green-50 border-green-200")}>
+    <Card className={`hover:shadow-md transition-shadow ${mission.isCompleted ? "bg-green-50 border-green-200" : ""}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              {isCompleted ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <Clock className="h-5 w-5 text-orange-500" />
-              )}
-              {mission.title || `Missão ${mission.mission_type}`}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {mission.description || "Complete esta missão para ganhar recompensas"}
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg">{mission.title}</CardTitle>
+              {mission.isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
+            </div>
+            <div className="flex gap-2 mb-2">
+              <Badge className={getDifficultyColor(mission.difficulty)} variant="secondary">
+                {mission.difficulty}
+              </Badge>
+              <Badge className={getTypeColor(mission.type)} variant="secondary">
+                {mission.type}
+              </Badge>
+            </div>
           </div>
-          <Badge variant={isCompleted ? "default" : "secondary"}>{isCompleted ? "Completa" : "Pendente"}</Badge>
+          {mission.deadline && (
+            <div className="flex items-center gap-1 text-sm text-gray-500">
+              <Clock className="h-4 w-4" />
+              <span>{mission.deadline}</span>
+            </div>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Progress Bar */}
+        <p className="text-gray-600 text-sm">{mission.description}</p>
+
+        {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Progresso</span>
-            <span>{progress}%</span>
+            <span>
+              {mission.progress}/{mission.maxProgress}
+            </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progressPercentage} className="h-2" />
         </div>
 
+        {/* Requirements */}
+        {mission.requirements.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Requisitos:</h4>
+            <ul className="space-y-1">
+              {mission.requirements.map((requirement, index) => (
+                <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                  <Target className="h-3 w-3" />
+                  {requirement}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Rewards */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-3 border-t">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-sm">
-              <Star className="h-4 w-4 text-yellow-500" />
-              <span className="font-medium">{mission.xp_reward} XP</span>
+            <div className="flex items-center gap-1">
+              <Trophy className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm font-medium">{mission.xpReward} XP</span>
             </div>
-            <div className="flex items-center gap-1 text-sm">
-              <Zap className="h-4 w-4 text-blue-500" />
-              <span className="font-medium">{mission.token_reward} Tokens</span>
+            <div className="flex items-center gap-1">
+              <Coins className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium">{mission.tokenReward} tokens</span>
             </div>
           </div>
 
-          {!isCompleted && (
-            <Button size="sm" onClick={handleComplete} disabled={isCompleting} className="min-w-[100px]">
-              {isCompleting ? "Completando..." : "Completar"}
+          {mission.isCompleted ? (
+            <Badge className="bg-green-100 text-green-800">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Concluída
+            </Badge>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => onComplete?.(mission.id)}
+              disabled={mission.progress < mission.maxProgress}
+            >
+              {mission.progress >= mission.maxProgress ? "Resgatar" : "Em Progresso"}
             </Button>
           )}
         </div>
-
-        {isCompleted && (
-          <div className="text-center py-2">
-            <p className="text-sm text-green-600 font-medium">✨ Missão completada! Recompensas recebidas.</p>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

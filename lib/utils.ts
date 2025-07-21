@@ -112,16 +112,40 @@ export function formatRelativeTime(date: Date | string): string {
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000)
 
-  if (diffInSeconds < 60) return "agora mesmo"
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min atrás`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} h atrás`
-  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} dias atrás`
-
-  return formatDate(dateObj)
+  if (diffInSeconds < 60) {
+    return "agora"
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `${minutes} min atrás`
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600)
+    return `${hours}h atrás`
+  } else {
+    const days = Math.floor(diffInSeconds / 86400)
+    return `${days}d atrás`
+  }
 }
 
 export function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36)
+}
+
+export function calculateLevel(xp: number): number {
+  return Math.floor(xp / 1000) + 1
+}
+
+export function calculateXpForNextLevel(currentXp: number): number {
+  const currentLevel = calculateLevel(currentXp)
+  return currentLevel * 1000 - currentXp
+}
+
+export function getProgressPercentage(currentXp: number): number {
+  const currentLevel = calculateLevel(currentXp)
+  const xpForCurrentLevel = (currentLevel - 1) * 1000
+  const xpForNextLevel = currentLevel * 1000
+  const progressXp = currentXp - xpForCurrentLevel
+  const totalXpNeeded = xpForNextLevel - xpForCurrentLevel
+  return Math.round((progressXp / totalXpNeeded) * 100)
 }
 
 export function slugify(text: string): string {

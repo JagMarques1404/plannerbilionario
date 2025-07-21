@@ -6,65 +6,95 @@ interface UserProfile {
   id: string
   name: string
   email: string
+  avatar?: string
   level: number
   xp: number
   tokens: number
-  balance: number
-  avatar?: string
-  createdAt: string
+  streak: number
+  badges: string[]
+  stats: {
+    totalInvestments: number
+    totalReturn: number
+    bestStreak: number
+    missionsCompleted: number
+    rankingPosition: number
+  }
+  preferences: {
+    notifications: boolean
+    publicProfile: boolean
+    theme: "light" | "dark" | "system"
+  }
 }
 
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Simular dados do usuário para o preview
-    const mockProfile: UserProfile = {
-      id: "1",
-      name: "Julius Investidor",
-      email: "julius@invest.com",
-      level: 5,
-      xp: 4250,
-      tokens: 1850,
-      balance: 125000,
-      avatar: "/placeholder.svg?height=40&width=40",
-      createdAt: new Date().toISOString(),
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true)
+
+        // Simular API call
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        const mockProfile: UserProfile = {
+          id: "1",
+          name: "Investidor Julius",
+          email: "investidor@julius.com",
+          avatar: "/placeholder.svg?height=100&width=100&text=IJ",
+          level: 15,
+          xp: 12500,
+          tokens: 2500,
+          streak: 7,
+          badges: ["Iniciante", "Consistente", "Diversificado", "Mentor"],
+          stats: {
+            totalInvestments: 45000,
+            totalReturn: 8.5,
+            bestStreak: 30,
+            missionsCompleted: 127,
+            rankingPosition: 23,
+          },
+          preferences: {
+            notifications: true,
+            publicProfile: true,
+            theme: "system",
+          },
+        }
+
+        setProfile(mockProfile)
+      } catch (err) {
+        setError("Erro ao carregar perfil do usuário")
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    setTimeout(() => {
-      setProfile(mockProfile)
-      setLoading(false)
-    }, 1000)
+    fetchProfile()
   }, [])
 
-  const updateProfile = (updates: Partial<UserProfile>) => {
-    if (profile) {
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!profile) return
+
+    try {
+      setIsLoading(true)
+
+      // Simular API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
       setProfile({ ...profile, ...updates })
-    }
-  }
-
-  const addXp = (amount: number) => {
-    if (profile) {
-      const newXp = profile.xp + amount
-      const newLevel = Math.floor(newXp / 1000) + 1
-      updateProfile({ xp: newXp, level: newLevel })
-    }
-  }
-
-  const addTokens = (amount: number) => {
-    if (profile) {
-      updateProfile({ tokens: profile.tokens + amount })
+    } catch (err) {
+      setError("Erro ao atualizar perfil")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return {
     profile,
-    loading,
+    isLoading,
     error,
     updateProfile,
-    addXp,
-    addTokens,
   }
 }
