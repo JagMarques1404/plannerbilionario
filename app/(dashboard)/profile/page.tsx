@@ -1,274 +1,405 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Trophy, Target, Settings, Edit, Save, X } from "lucide-react"
-import { useApp } from "@/contexts/app-context"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Trophy,
+  TrendingUp,
+  Calendar,
+  Target,
+  Settings,
+  Edit,
+  Share2,
+  BarChart3,
+  Wallet,
+  Users,
+  Clock,
+} from "lucide-react"
+import { ProfileSkeleton } from "@/components/loading-skeleton"
 
-const patrimonioHistorico = [
-  { mes: "Jan", valor: 15000 },
-  { mes: "Fev", valor: 16500 },
-  { mes: "Mar", valor: 18000 },
-  { mes: "Abr", valor: 19200 },
-  { mes: "Mai", valor: 20800 },
-  { mes: "Jun", valor: 22000 },
-  { mes: "Jul", valor: 23500 },
-  { mes: "Ago", valor: 25000 },
+interface UserProfile {
+  id: string
+  name: string
+  username: string
+  email: string
+  avatar: string
+  level: number
+  xp: number
+  nextLevelXp: number
+  rank: number
+  totalUsers: number
+  joinDate: string
+  streak: number
+  completedMissions: number
+  totalRewards: number
+  portfolioValue: number
+  totalReturn: number
+  followers: number
+  following: number
+}
+
+interface Achievement {
+  id: string
+  title: string
+  description: string
+  icon: string
+  unlockedAt: string
+  rarity: "common" | "rare" | "epic" | "legendary"
+}
+
+const mockProfile: UserProfile = {
+  id: "1",
+  name: "João Silva",
+  username: "joao_investidor",
+  email: "joao@email.com",
+  avatar: "/placeholder.svg?height=100&width=100",
+  level: 12,
+  xp: 2450,
+  nextLevelXp: 3000,
+  rank: 47,
+  totalUsers: 1250,
+  joinDate: "2024-01-15",
+  streak: 15,
+  completedMissions: 28,
+  totalRewards: 5600,
+  portfolioValue: 25000,
+  totalReturn: 12.5,
+  followers: 89,
+  following: 156,
+}
+
+const mockAchievements: Achievement[] = [
+  {
+    id: "1",
+    title: "Primeiro Passo",
+    description: "Complete sua primeira missão",
+    icon: "🎯",
+    unlockedAt: "2024-01-16",
+    rarity: "common",
+  },
+  {
+    id: "2",
+    title: "Streak Master",
+    description: "Mantenha um streak de 10 dias",
+    icon: "🔥",
+    unlockedAt: "2024-01-25",
+    rarity: "rare",
+  },
+  {
+    id: "3",
+    title: "Social Butterfly",
+    description: "Siga 50 investidores",
+    icon: "👥",
+    unlockedAt: "2024-02-01",
+    rarity: "epic",
+  },
+  {
+    id: "4",
+    title: "Midas Touch",
+    description: "Alcance 10% de retorno",
+    icon: "💰",
+    unlockedAt: "2024-02-10",
+    rarity: "legendary",
+  },
 ]
 
 export default function ProfilePage() {
-  const { user, updatePatrimonio } = useApp()
-  const [isEditing, setIsEditing] = useState(false)
-  const [editData, setEditData] = useState({
-    patrimonio: user?.patrimonio || 0,
-    meta12meses: user?.meta12meses || 0,
-  })
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("overview")
 
-  if (!user) return null
+  useEffect(() => {
+    // Simular carregamento
+    setTimeout(() => {
+      setProfile(mockProfile)
+      setAchievements(mockAchievements)
+      setLoading(false)
+    }, 1500)
+  }, [])
 
-  const handleSave = () => {
-    updatePatrimonio(editData.patrimonio)
-    setIsEditing(false)
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case "common":
+        return "bg-gray-100 text-gray-800"
+      case "rare":
+        return "bg-blue-100 text-blue-800"
+      case "epic":
+        return "bg-purple-100 text-purple-800"
+      case "legendary":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
   }
 
-  const handleCancel = () => {
-    setEditData({
-      patrimonio: user.patrimonio,
-      meta12meses: user.meta12meses,
-    })
-    setIsEditing(false)
+  if (loading || !profile) {
+    return <ProfileSkeleton />
   }
 
-  const progressoMeta = (user.patrimonio / user.meta12meses) * 100
-  const crescimentoTotal = ((user.patrimonio - 15000) / 15000) * 100 // Assumindo valor inicial de R$ 15k
-
-  const badges = [
-    { nome: "Bem-vindo", descricao: "Primeiro login na plataforma", icon: "🎉" },
-    { nome: "Streak 7 dias", descricao: "Acessou por 7 dias consecutivos", icon: "🔥" },
-    { nome: "Investidor Iniciante", descricao: "Completou primeira missão de investimento", icon: "💰" },
-    { nome: "Disciplinado", descricao: "Registrou gastos por 30 dias", icon: "📊" },
-    { nome: "Construtor", descricao: "Alcançou o grupo Construtor", icon: "🏗️" },
-  ]
+  const xpProgress = (profile.xp / profile.nextLevelXp) * 100
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1a237e]">Meu Perfil</h1>
-          <p className="text-gray-600 mt-1">Acompanhe seu progresso e gerencie suas informações</p>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">Perfil</h1>
+          <p className="text-base text-gray-600">Gerencie suas informações e acompanhe seu progresso</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            {user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
-          </div>
-        </div>
+        <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-3">
+          <Edit className="h-4 w-4 mr-2" />
+          Editar Perfil
+        </Button>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="progress">Progresso</TabsTrigger>
-          <TabsTrigger value="badges">Conquistas</TabsTrigger>
-          <TabsTrigger value="settings">Configurações</TabsTrigger>
+      {/* Profile Card */}
+      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="relative">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
+                <AvatarFallback className="text-xl font-semibold bg-orange-100 text-orange-600">
+                  {profile.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-2 -right-2 bg-orange-400 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                {profile.level}
+              </div>
+            </div>
+
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">{profile.name}</h2>
+                <p className="text-base text-gray-600">@{profile.username}</p>
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <Badge className="bg-orange-100 text-orange-800">Nível {profile.level}</Badge>
+                  <Badge className="bg-blue-100 text-blue-800">#{profile.rank} no Ranking</Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-base text-gray-600">Experiência</span>
+                  <span className="text-base font-semibold text-gray-900">
+                    {profile.xp}/{profile.nextLevelXp} XP
+                  </span>
+                </div>
+                <Progress value={xpProgress} className="h-2" />
+                <p className="text-sm text-gray-500">{profile.nextLevelXp - profile.xp} XP para o próximo nível</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-xl font-bold text-orange-500">{profile.streak}</div>
+                  <div className="text-sm text-gray-600">Dias de Streak</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-blue-500">{profile.completedMissions}</div>
+                  <div className="text-sm text-gray-600">Missões</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-green-500">{profile.followers}</div>
+                  <div className="text-sm text-gray-600">Seguidores</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-purple-500">{profile.following}</div>
+                  <div className="text-sm text-gray-600">Seguindo</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent">
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar
+              </Button>
+              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent">
+                <Settings className="h-4 w-4 mr-2" />
+                Configurações
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm rounded-lg p-1">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Conquistas
+          </TabsTrigger>
+          <TabsTrigger value="portfolio" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Portfólio
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Atividade
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-[#1a237e] flex items-center">
-                  <User className="h-5 w-5 mr-2" />
-                  Informações Pessoais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Nome</Label>
-                  <p className="text-lg font-semibold text-[#1a237e]">{user.name}</p>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Estatísticas Gerais</h3>
+                  <BarChart3 className="h-8 w-8 text-blue-500" />
                 </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">E-mail</Label>
-                  <p className="text-lg">{user.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Grupo Atual</Label>
-                  <Badge className="bg-[#ff5722] text-white text-lg px-3 py-1">{user.grupo}</Badge>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Membro desde</Label>
-                  <p className="text-lg">Janeiro 2024</p>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Ranking Atual</span>
+                    <span className="text-base font-semibold text-gray-900">#{profile.rank}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Total de Usuários</span>
+                    <span className="text-base font-semibold text-gray-900">{profile.totalUsers}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Membro desde</span>
+                    <span className="text-base font-semibold text-gray-900">
+                      {new Date(profile.joinDate).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-[#1a237e] flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  Situação Financeira
-                  {!isEditing && (
-                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="ml-auto">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <>
-                    <div>
-                      <Label htmlFor="patrimonio">Patrimônio Atual</Label>
-                      <Input
-                        id="patrimonio"
-                        type="number"
-                        value={editData.patrimonio}
-                        onChange={(e) => setEditData((prev) => ({ ...prev, patrimonio: Number(e.target.value) }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="meta">Meta 12 meses</Label>
-                      <Input
-                        id="meta"
-                        type="number"
-                        value={editData.meta12meses}
-                        onChange={(e) => setEditData((prev) => ({ ...prev, meta12meses: Number(e.target.value) }))}
-                      />
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar
-                      </Button>
-                      <Button onClick={handleCancel} variant="outline">
-                        <X className="h-4 w-4 mr-2" />
-                        Cancelar
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Patrimônio Atual</Label>
-                      <p className="text-2xl font-bold text-green-600">R$ {user.patrimonio.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Meta 12 meses</Label>
-                      <p className="text-2xl font-bold text-[#ff5722]">R$ {user.meta12meses.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Progresso da Meta</Label>
-                      <Progress value={progressoMeta} className="mt-2" />
-                      <p className="text-sm text-gray-600 mt-1">{progressoMeta.toFixed(1)}% da meta alcançada</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Principal Dificuldade</Label>
-                      <p className="text-lg capitalize">{user.dificuldadePrincipal.replace("-", " ")}</p>
-                    </div>
-                  </>
-                )}
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Recompensas</h3>
+                  <Trophy className="h-8 w-8 text-yellow-500" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Total de Pontos</span>
+                    <span className="text-base font-semibold text-orange-500">{profile.totalRewards}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Missões Completadas</span>
+                    <span className="text-base font-semibold text-gray-900">{profile.completedMissions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Conquistas</span>
+                    <span className="text-base font-semibold text-gray-900">{achievements.length}</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-[#ff5722]">{user.xp.toLocaleString()}</div>
-                <p className="text-sm text-gray-600">Total XP</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-blue-600">{user.nivel}</div>
-                <p className="text-sm text-gray-600">Nível Atual</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-red-500">{user.streak}</div>
-                <p className="text-sm text-gray-600">Streak (dias)</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-yellow-600">#{user.posicaoRanking}</div>
-                <p className="text-sm text-gray-600">Posição Ranking</p>
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Social</h3>
+                  <Users className="h-8 w-8 text-green-500" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Seguidores</span>
+                    <span className="text-base font-semibold text-gray-900">{profile.followers}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Seguindo</span>
+                    <span className="text-base font-semibold text-gray-900">{profile.following}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Streak Atual</span>
+                    <span className="text-base font-semibold text-orange-500">{profile.streak} dias</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="progress" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#1a237e]">Evolução Patrimonial</CardTitle>
-              <CardDescription>Histórico dos últimos 8 meses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={patrimonioHistorico}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="mes" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`R$ ${Number(value).toLocaleString()}`, "Patrimônio"]} />
-                  <Line
-                    type="monotone"
-                    dataKey="valor"
-                    stroke="#ff5722"
-                    strokeWidth={3}
-                    dot={{ fill: "#ff5722", strokeWidth: 2, r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <TabsContent value="achievements" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {achievements.map((achievement) => (
+              <Card key={achievement.id} className="bg-white shadow-lg rounded-xl border border-gray-100">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-3xl">{achievement.icon}</div>
+                    <Badge className={getRarityColor(achievement.rarity)}>
+                      {achievement.rarity === "common"
+                        ? "Comum"
+                        : achievement.rarity === "rare"
+                          ? "Raro"
+                          : achievement.rarity === "epic"
+                            ? "Épico"
+                            : "Lendário"}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{achievement.title}</h3>
+                    <p className="text-base text-gray-600">{achievement.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Calendar className="h-4 w-4" />
+                    Desbloqueado em {new Date(achievement.unlockedAt).toLocaleDateString("pt-BR")}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
+        <TabsContent value="portfolio" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
               <CardHeader>
-                <CardTitle className="text-[#1a237e]">Crescimento Total</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-green-500" />
+                  Valor do Portfólio
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-green-600 mb-2">+{crescimentoTotal.toFixed(1)}%</div>
-                  <p className="text-gray-600">Desde o início da jornada</p>
-                  <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      🎉 Parabéns! Você já cresceu mais que 78% dos usuários da plataforma!
-                    </p>
-                  </div>
+              <CardContent className="space-y-4">
+                <div className="text-3xl font-bold text-green-500">
+                  R$ {profile.portfolioValue.toLocaleString("pt-BR")}
+                </div>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <span className="text-base font-semibold text-green-500">+{profile.totalReturn}%</span>
+                  <span className="text-base text-gray-600">retorno total</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
               <CardHeader>
-                <CardTitle className="text-[#1a237e]">Próximo Objetivo</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-500" />
+                  Performance
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <p className="font-medium">Alcançar R$ 30.000</p>
-                    <Progress value={83} className="mt-2" />
-                    <p className="text-sm text-gray-600 mt-1">Faltam R$ 5.000</p>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Melhor Mês</span>
+                    <span className="text-base font-semibold text-green-500">+8.2%</span>
                   </div>
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      💡 Com seu ritmo atual, você deve alcançar essa meta em 2-3 meses!
-                    </p>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Pior Mês</span>
+                    <span className="text-base font-semibold text-red-500">-2.1%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base text-gray-600">Volatilidade</span>
+                    <span className="text-base font-semibold text-gray-900">12.5%</span>
                   </div>
                 </div>
               </CardContent>
@@ -276,98 +407,31 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="badges" className="space-y-6">
-          <Card>
+        <TabsContent value="activity" className="space-y-4">
+          <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-[#1a237e] flex items-center">
-                <Trophy className="h-5 w-5 mr-2" />
-                Suas Conquistas
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-purple-500" />
+                Atividade Recente
               </CardTitle>
-              <CardDescription>Badges desbloqueadas ao longo da sua jornada</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {badges.map((badge, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-4xl mb-2">{badge.icon}</div>
-                      <h3 className="font-bold text-[#1a237e] mb-1">{badge.nome}</h3>
-                      <p className="text-sm text-gray-600">{badge.descricao}</p>
-                      <Badge className="mt-2 bg-green-100 text-green-800">Desbloqueado</Badge>
-                    </CardContent>
-                  </Card>
+              <div className="space-y-4">
+                {[
+                  { action: "Completou a missão 'Primeira Operação'", time: "2 horas atrás", icon: "🎯" },
+                  { action: "Seguiu João Investidor", time: "1 dia atrás", icon: "👥" },
+                  { action: "Desbloqueou conquista 'Streak Master'", time: "2 dias atrás", icon: "🏆" },
+                  { action: "Fez uma operação de compra", time: "3 dias atrás", icon: "📈" },
+                  { action: "Completou o curso de análise técnica", time: "1 semana atrás", icon: "📚" },
+                ].map((activity, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="text-xl">{activity.icon}</div>
+                    <div className="flex-1">
+                      <p className="text-base text-gray-900">{activity.action}</p>
+                      <p className="text-sm text-gray-500">{activity.time}</p>
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#1a237e]">Próximas Conquistas</CardTitle>
-              <CardDescription>Badges que você pode desbloquear em breve</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center opacity-60">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <h3 className="font-bold text-gray-600 mb-1">Meta Alcançada</h3>
-                  <p className="text-sm text-gray-500">Alcance sua meta de 12 meses</p>
-                  <Progress value={83} className="mt-2" />
-                </div>
-                <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center opacity-60">
-                  <div className="text-4xl mb-2">👑</div>
-                  <h3 className="font-bold text-gray-600 mb-1">Acelerador</h3>
-                  <p className="text-sm text-gray-500">Alcance o grupo Acelerador</p>
-                  <Progress value={50} className="mt-2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#1a237e] flex items-center">
-                <Settings className="h-5 w-5 mr-2" />
-                Configurações da Conta
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-medium mb-4">Notificações</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span>Missões diárias</span>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Atualizações do ranking</span>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Novos badges desbloqueados</span>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-4">Privacidade</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span>Mostrar meu nome no ranking</span>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Permitir que outros vejam meu progresso</span>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <Button variant="destructive">Excluir Conta</Button>
               </div>
             </CardContent>
           </Card>

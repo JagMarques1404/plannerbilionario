@@ -1,7 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { Folder, MoreHorizontal, Share, Trash2, type LucideIcon } from "lucide-react"
+import { Folder, Forward, MoreHorizontal, Trash2, type LucideIcon } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -33,21 +32,21 @@ export function NavProjects({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Integrações</SidebarGroupLabel>
+      <SidebarGroupLabel>Projetos</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <Link href={item.url}>
+              <a href={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
-              </Link>
+              </a>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
                   <MoreHorizontal />
-                  <span className="sr-only">Mais</span>
+                  <span className="sr-only">More</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -57,16 +56,16 @@ export function NavProjects({
               >
                 <DropdownMenuItem>
                   <Folder className="text-muted-foreground" />
-                  <span>Ver Detalhes</span>
+                  <span>View Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Share className="text-muted-foreground" />
-                  <span>Compartilhar</span>
+                  <Forward className="text-muted-foreground" />
+                  <span>Share Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Trash2 className="text-muted-foreground" />
-                  <span>Desconectar</span>
+                  <span>Delete Project</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

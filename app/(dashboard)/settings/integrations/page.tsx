@@ -1,399 +1,362 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Bell, Key, Database, Cloud, AlertTriangle, CheckCircle, RefreshCw, Trash2, Plus } from "lucide-react"
+import { Settings, Link, Shield, Key, CheckCircle, ExternalLink } from "lucide-react"
 
-const apiConnections = [
+const integrations = [
   {
-    id: "banco-brasil",
-    name: "Banco do Brasil",
-    type: "Bancária",
+    id: "broker-xp",
+    name: "XP Investimentos",
+    description: "Conecte sua conta XP para importar automaticamente suas operações",
     status: "connected",
-    lastSync: "2024-01-20T14:30:00",
-    permissions: ["read_balance", "read_transactions"],
-    logo: "🏦",
+    icon: "🏦",
+    category: "brokers",
+    features: ["Importação automática", "Análise de performance", "Alertas de operações"],
   },
   {
-    id: "nubank",
-    name: "Nubank",
-    type: "Bancária",
-    status: "connected",
-    lastSync: "2024-01-20T12:15:00",
-    permissions: ["read_balance", "read_transactions", "read_cards"],
-    logo: "💜",
-  },
-  {
-    id: "binance",
-    name: "Binance",
-    type: "Exchange",
-    status: "error",
-    lastSync: "2024-01-19T18:45:00",
-    permissions: ["read_portfolio", "read_trades"],
-    logo: "🟡",
-  },
-  {
-    id: "clear",
+    id: "broker-clear",
     name: "Clear Corretora",
-    type: "Corretora",
-    status: "disconnected",
-    lastSync: null,
-    permissions: [],
-    logo: "📈",
+    description: "Sincronize suas operações da Clear com o Julius Invest",
+    status: "available",
+    icon: "📊",
+    category: "brokers",
+    features: ["Sincronização em tempo real", "Relatórios detalhados"],
+  },
+  {
+    id: "telegram",
+    name: "Telegram Bot",
+    description: "Receba notificações e alertas diretamente no Telegram",
+    status: "connected",
+    icon: "📱",
+    category: "notifications",
+    features: ["Alertas personalizados", "Comandos por chat", "Relatórios diários"],
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Business",
+    description: "Notificações importantes via WhatsApp",
+    status: "available",
+    icon: "💬",
+    category: "notifications",
+    features: ["Alertas de mercado", "Resumos semanais"],
+  },
+  {
+    id: "email-marketing",
+    name: "Email Marketing",
+    description: "Sistema de emails educacionais e newsletters",
+    status: "connected",
+    icon: "📧",
+    category: "marketing",
+    features: ["Newsletters", "Conteúdo educacional", "Alertas personalizados"],
+  },
+  {
+    id: "google-sheets",
+    name: "Google Sheets",
+    description: "Exporte seus dados para planilhas do Google",
+    status: "available",
+    icon: "📈",
+    category: "data",
+    features: ["Exportação automática", "Templates prontos", "Sincronização bidirecional"],
   },
 ]
 
-export default function IntegrationsSettingsPage() {
-  const [connections, setConnections] = useState(apiConnections)
-  const [notifications, setNotifications] = useState({
-    priceAlerts: true,
-    transactionAlerts: true,
-    syncErrors: true,
-    weeklyReports: false,
-    marketNews: true,
+const apiKeys = [
+  {
+    id: "julius-api",
+    name: "Julius API Key",
+    description: "Chave principal para acesso à API do Julius Invest",
+    created: "2024-01-15",
+    lastUsed: "2024-01-20",
+    permissions: ["read", "write", "admin"],
+  },
+  {
+    id: "webhook-key",
+    name: "Webhook Key",
+    description: "Chave para receber webhooks de operações",
+    created: "2024-01-10",
+    lastUsed: "2024-01-19",
+    permissions: ["webhook"],
+  },
+]
+
+export default function IntegrationsPage() {
+  const [activeTab, setActiveTab] = useState("integrations")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+
+  const filteredIntegrations = integrations.filter((integration) => {
+    const matchesSearch =
+      integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      integration.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || integration.category === selectedCategory
+    return matchesSearch && matchesCategory
   })
 
-  const handleToggleConnection = (id: string) => {
-    setConnections((prev) =>
-      prev.map((conn) =>
-        conn.id === id ? { ...conn, status: conn.status === "connected" ? "disconnected" : "connected" } : conn,
-      ),
-    )
-  }
-
-  const handleSyncConnection = (id: string) => {
-    // Simular sincronização
-    setConnections((prev) =>
-      prev.map((conn) => (conn.id === id ? { ...conn, lastSync: new Date().toISOString() } : conn)),
-    )
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "connected":
-        return "bg-green-100 text-green-800"
-      case "error":
-        return "bg-red-100 text-red-800"
-      case "disconnected":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "connected":
-        return "Conectado"
-      case "error":
-        return "Erro"
-      case "disconnected":
-        return "Desconectado"
-      default:
-        return "Desconhecido"
-    }
-  }
+  const categories = [
+    { id: "all", name: "Todas", count: integrations.length },
+    { id: "brokers", name: "Corretoras", count: integrations.filter((i) => i.category === "brokers").length },
+    {
+      id: "notifications",
+      name: "Notificações",
+      count: integrations.filter((i) => i.category === "notifications").length,
+    },
+    { id: "marketing", name: "Marketing", count: integrations.filter((i) => i.category === "marketing").length },
+    { id: "data", name: "Dados", count: integrations.filter((i) => i.category === "data").length },
+  ]
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Configurações de Integrações</h1>
-          <p className="text-gray-600 text-lg">Gerencie suas conexões e APIs simuladas</p>
-        </div>
-        <Badge className="bg-red-500 text-white px-4 py-2">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          MODO SIMULADO
-        </Badge>
-      </div>
-
-      <Tabs defaultValue="connections" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white p-1 rounded-2xl shadow-lg">
-          <TabsTrigger value="connections" className="rounded-xl font-semibold">
-            Conexões
-          </TabsTrigger>
-          <TabsTrigger value="api-keys" className="rounded-xl font-semibold">
-            API Keys
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-xl font-semibold">
-            Notificações
-          </TabsTrigger>
-          <TabsTrigger value="security" className="rounded-xl font-semibold">
-            Segurança
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Conexões */}
-        <TabsContent value="connections" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center text-gray-900">
-                    <Database className="h-5 w-5 mr-2 text-blue-500" />
-                    Conexões Ativas (Simuladas)
-                  </CardTitle>
-                  <CardDescription>Gerencie suas integrações bancárias e de investimento</CardDescription>
-                </div>
-                <Button className="bg-blue-500 hover:bg-blue-600">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Conexão
-                </Button>
+    <div className="min-h-screen bg-yellow-100">
+      <main className="p-4 md:ml-64 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100 mb-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <Settings className="h-6 w-6 text-orange-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {connections.map((connection) => (
-                  <div key={connection.id} className="p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-2xl">{connection.logo}</div>
-                        <div>
-                          <div className="font-semibold text-gray-900">{connection.name}</div>
-                          <div className="text-sm text-gray-600">{connection.type}</div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Integrações</h1>
+                <p className="text-base text-gray-600">Conecte suas contas e configure notificações</p>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-base font-medium text-green-800">3 Conectadas</span>
+                </div>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2">
+                  <Link className="h-5 w-5 text-blue-600" />
+                  <span className="text-base font-medium text-blue-800">6 Disponíveis</span>
+                </div>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <div className="flex items-center space-x-2">
+                  <Key className="h-5 w-5 text-orange-600" />
+                  <span className="text-base font-medium text-orange-800">2 API Keys</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="bg-white shadow-lg rounded-xl p-1 border border-gray-100">
+              <TabsTrigger value="integrations" className="text-base">
+                Integrações
+              </TabsTrigger>
+              <TabsTrigger value="api-keys" className="text-base">
+                API Keys
+              </TabsTrigger>
+              <TabsTrigger value="webhooks" className="text-base">
+                Webhooks
+              </TabsTrigger>
+              <TabsTrigger value="security" className="text-base">
+                Segurança
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="integrations" className="space-y-6">
+              {/* Filters */}
+              <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="search" className="text-base font-medium text-gray-700 mb-2 block">
+                      Buscar integrações
+                    </Label>
+                    <Input
+                      id="search"
+                      placeholder="Digite o nome da integração..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="text-base"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-gray-700 mb-2 block">Categoria</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((category) => (
+                        <Button
+                          key={category.id}
+                          variant={selectedCategory === category.id ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`text-sm ${
+                            selectedCategory === category.id
+                              ? "bg-orange-400 hover:bg-orange-500 text-white"
+                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {category.name} ({category.count})
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Integrations Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {filteredIntegrations.map((integration) => (
+                  <Card
+                    key={integration.id}
+                    className="bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-2xl">{integration.icon}</div>
+                          <div>
+                            <CardTitle className="text-lg font-semibold text-gray-800">{integration.name}</CardTitle>
+                            <Badge
+                              variant={integration.status === "connected" ? "default" : "secondary"}
+                              className={`text-xs ${
+                                integration.status === "connected"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {integration.status === "connected" ? "Conectado" : "Disponível"}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(connection.status)}>{getStatusText(connection.status)}</Badge>
                         <Switch
-                          checked={connection.status === "connected"}
-                          onCheckedChange={() => handleToggleConnection(connection.id)}
+                          checked={integration.status === "connected"}
+                          className="data-[state=checked]:bg-orange-400"
                         />
                       </div>
-                    </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-base text-gray-600 mb-4">{integration.description}</p>
 
-                    {connection.lastSync && (
-                      <div className="text-sm text-gray-600 mb-3">
-                        Última sincronização: {new Date(connection.lastSync).toLocaleString()}
-                      </div>
-                    )}
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Recursos:</h4>
+                          <ul className="space-y-1">
+                            {integration.features.map((feature, index) => (
+                              <li key={index} className="flex items-center space-x-2 text-sm text-gray-600">
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-wrap gap-1">
-                        {connection.permissions.map((permission) => (
-                          <Badge key={permission} variant="outline" className="text-xs">
-                            {permission}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex space-x-2">
                         <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSyncConnection(connection.id)}
-                          className="bg-transparent"
+                          className={`w-full text-base ${
+                            integration.status === "connected"
+                              ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              : "bg-orange-400 hover:bg-orange-500 text-white"
+                          }`}
                         >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          Sincronizar
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 bg-transparent">
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Remover
+                          {integration.status === "connected" ? "Configurar" : "Conectar"}
+                          <ExternalLink className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </TabsContent>
 
-        {/* API Keys */}
-        <TabsContent value="api-keys" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-gray-900">
-                <Key className="h-5 w-5 mr-2 text-yellow-500" />
-                Chaves de API (Simuladas)
-              </CardTitle>
-              <CardDescription>Gerencie suas chaves de acesso às APIs externas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  <span className="font-medium text-yellow-900">Importante</span>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  Todas as chaves de API são simuladas. Em um ambiente real, mantenha suas chaves seguras e nunca as
-                  compartilhe.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">Binance API Key</span>
-                    <Badge className="bg-green-100 text-green-800">Ativa</Badge>
+            <TabsContent value="api-keys" className="space-y-6">
+              {/* API Keys Header */}
+              <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-800">API Keys</h2>
+                    <p className="text-base text-gray-600">Gerencie suas chaves de acesso à API</p>
                   </div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Input value="sk_test_••••••••••••••••••••••••••••••••" readOnly className="font-mono text-sm" />
-                    <Button size="sm" variant="outline" className="bg-transparent">
-                      Mostrar
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-500">Criada em: 15/01/2024 • Último uso: 20/01/2024</div>
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">Alpha Vantage API Key</span>
-                    <Badge className="bg-gray-100 text-gray-800">Inativa</Badge>
-                  </div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Input value="av_test_••••••••••••••••••••••••••••••••" readOnly className="font-mono text-sm" />
-                    <Button size="sm" variant="outline" className="bg-transparent">
-                      Mostrar
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-500">Criada em: 10/01/2024 • Nunca usada</div>
+                  <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-2 rounded-lg">
+                    <Key className="h-4 w-4 mr-2" />
+                    Nova API Key
+                  </Button>
                 </div>
               </div>
 
-              <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Nova Chave
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Notificações */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-gray-900">
-                <Bell className="h-5 w-5 mr-2 text-purple-500" />
-                Configurações de Notificação
-              </CardTitle>
-              <CardDescription>Configure quando e como receber alertas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              {/* API Keys List */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <div className="font-medium text-gray-900">Alertas de Preço</div>
-                    <div className="text-sm text-gray-600">Notificações quando ativos atingem alvos</div>
-                  </div>
-                  <Switch
-                    checked={notifications.priceAlerts}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, priceAlerts: checked }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <div className="font-medium text-gray-900">Alertas de Transação</div>
-                    <div className="text-sm text-gray-600">Notificações de movimentações bancárias</div>
-                  </div>
-                  <Switch
-                    checked={notifications.transactionAlerts}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, transactionAlerts: checked }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <div className="font-medium text-gray-900">Erros de Sincronização</div>
-                    <div className="text-sm text-gray-600">Alertas quando APIs falham</div>
-                  </div>
-                  <Switch
-                    checked={notifications.syncErrors}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, syncErrors: checked }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <div className="font-medium text-gray-900">Relatórios Semanais</div>
-                    <div className="text-sm text-gray-600">Resumo semanal por email</div>
-                  </div>
-                  <Switch
-                    checked={notifications.weeklyReports}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, weeklyReports: checked }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <div className="font-medium text-gray-900">Notícias do Mercado</div>
-                    <div className="text-sm text-gray-600">Atualizações importantes do mercado</div>
-                  </div>
-                  <Switch
-                    checked={notifications.marketNews}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, marketNews: checked }))}
-                  />
-                </div>
+                {apiKeys.map((apiKey) => (
+                  <Card key={apiKey.id} className="bg-white shadow-lg border border-gray-100">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <Key className="h-5 w-5 text-gray-400" />
+                            <h3 className="text-lg font-semibold text-gray-800">{apiKey.name}</h3>
+                            <div className="flex space-x-2">
+                              {apiKey.permissions.map((permission) => (
+                                <Badge key={permission} variant="secondary" className="text-xs">
+                                  {permission}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-base text-gray-600 mb-3">{apiKey.description}</p>
+                          <div className="flex items-center space-x-6 text-sm text-gray-500">
+                            <span>Criada: {apiKey.created}</span>
+                            <span>Último uso: {apiKey.lastUsed}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm" className="text-sm bg-transparent">
+                            Copiar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-sm text-red-600 hover:text-red-700 bg-transparent"
+                          >
+                            Revogar
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </TabsContent>
 
-        {/* Segurança */}
-        <TabsContent value="security" className="space-y-6">
-          <Card className="card-premium border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-gray-900">
-                <Shield className="h-5 w-5 mr-2 text-green-500" />
-                Configurações de Segurança
-              </CardTitle>
-              <CardDescription>Proteja suas integrações e dados</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-green-50 rounded-xl">
-                <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-green-900">Criptografia Ativa</span>
+            <TabsContent value="webhooks" className="space-y-6">
+              <div className="bg-white shadow-lg rounded-xl p-8 border border-gray-100 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Link className="h-8 w-8 text-blue-600" />
                 </div>
-                <p className="text-sm text-green-700">Todas as suas chaves de API são criptografadas com AES-256.</p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Webhooks</h3>
+                <p className="text-base text-gray-600 mb-6">
+                  Configure endpoints para receber notificações em tempo real
+                </p>
+                <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-2 rounded-lg">
+                  Configurar Webhooks
+                </Button>
               </div>
+            </TabsContent>
 
-              <div className="p-4 bg-blue-50 rounded-xl">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Cloud className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-blue-900">Backup Automático</span>
+            <TabsContent value="security" className="space-y-6">
+              <div className="bg-white shadow-lg rounded-xl p-8 border border-gray-100 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-8 w-8 text-green-600" />
                 </div>
-                <p className="text-sm text-blue-700">Configurações são salvas automaticamente na nuvem.</p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Configurações de Segurança</h3>
+                <p className="text-base text-gray-600 mb-6">Gerencie autenticação de dois fatores e permissões</p>
+                <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-2 rounded-lg">
+                  Configurar Segurança
+                </Button>
               </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Logs de Acesso (Simulados)</h4>
-                <div className="space-y-2">
-                  <div className="p-3 bg-gray-50 rounded-lg text-sm">
-                    <div className="flex justify-between">
-                      <span>Login via API - Binance</span>
-                      <span className="text-gray-500">20/01/2024 14:30</span>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg text-sm">
-                    <div className="flex justify-between">
-                      <span>Sincronização - Nubank</span>
-                      <span className="text-gray-500">20/01/2024 12:15</span>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg text-sm">
-                    <div className="flex justify-between">
-                      <span>Chave API criada</span>
-                      <span className="text-gray-500">19/01/2024 09:45</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Button variant="outline" className="w-full bg-transparent">
-                Ver Todos os Logs
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   )
 }

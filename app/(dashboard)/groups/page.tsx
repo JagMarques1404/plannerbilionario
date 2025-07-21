@@ -1,269 +1,409 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Users, Crown, TrendingUp, Target, Star } from "lucide-react"
-import { useApp } from "@/contexts/app-context"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Users, Search, Plus, Crown, TrendingUp, MessageCircle, Lock, Globe, UserPlus, Settings } from "lucide-react"
+import { GroupCardSkeleton } from "@/components/loading-skeleton"
 
-const gruposInfo = [
+interface Group {
+  id: string
+  name: string
+  description: string
+  category: "beginner" | "intermediate" | "advanced" | "sector" | "strategy"
+  privacy: "public" | "private"
+  memberCount: number
+  maxMembers: number
+  isJoined: boolean
+  isOwner: boolean
+  avatar: string
+  createdAt: string
+  lastActivity: string
+  performance: number
+  tags: string[]
+  owner: {
+    name: string
+    avatar: string
+  }
+  topMembers: Array<{
+    name: string
+    avatar: string
+    performance: number
+  }>
+}
+
+const mockGroups: Group[] = [
   {
-    nome: "Iniciante",
-    icon: "🥉",
-    range: "R$ 0 - 10k",
-    cor: "bg-amber-100 text-amber-800",
-    usuarios: 2847,
-    descricao: "Primeiros passos na jornada financeira",
-    beneficios: ["Missões básicas", "Comunidade de apoio", "Conteúdo educativo"],
-    proximoGrupo: "Construtor",
+    id: "1",
+    name: "Investidores Iniciantes",
+    description:
+      "Grupo para quem está começando no mundo dos investimentos. Compartilhamos dicas básicas e estratégias seguras.",
+    category: "beginner",
+    privacy: "public",
+    memberCount: 1247,
+    maxMembers: 2000,
+    isJoined: true,
+    isOwner: false,
+    avatar: "/placeholder.svg?height=60&width=60",
+    createdAt: "2024-01-15",
+    lastActivity: "2 horas atrás",
+    performance: 8.5,
+    tags: ["Iniciante", "Educação", "Renda Fixa"],
+    owner: {
+      name: "Maria Silva",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    topMembers: [
+      { name: "João", avatar: "/placeholder.svg?height=32&width=32", performance: 12.3 },
+      { name: "Ana", avatar: "/placeholder.svg?height=32&width=32", performance: 10.8 },
+      { name: "Pedro", avatar: "/placeholder.svg?height=32&width=32", performance: 9.7 },
+    ],
   },
   {
-    nome: "Construtor",
-    icon: "🥈",
-    range: "R$ 10k - 50k",
-    cor: "bg-gray-100 text-gray-800",
-    usuarios: 1923,
-    descricao: "Construindo uma base sólida",
-    beneficios: ["Missões avançadas", "Calculadoras premium", "Webinars mensais"],
-    proximoGrupo: "Acelerador",
+    id: "2",
+    name: "Tech Stocks Brasil",
+    description: "Focado em ações de tecnologia brasileiras e internacionais. Análises técnicas e fundamentalistas.",
+    category: "sector",
+    privacy: "public",
+    memberCount: 856,
+    maxMembers: 1000,
+    isJoined: false,
+    isOwner: false,
+    avatar: "/placeholder.svg?height=60&width=60",
+    createdAt: "2024-02-01",
+    lastActivity: "30 minutos atrás",
+    performance: 15.2,
+    tags: ["Tecnologia", "Growth", "Internacional"],
+    owner: {
+      name: "Carlos Tech",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    topMembers: [
+      { name: "Lucas", avatar: "/placeholder.svg?height=32&width=32", performance: 18.5 },
+      { name: "Fernanda", avatar: "/placeholder.svg?height=32&width=32", performance: 16.2 },
+      { name: "Roberto", avatar: "/placeholder.svg?height=32&width=32", performance: 14.8 },
+    ],
   },
   {
-    nome: "Acelerador",
-    icon: "🥇",
-    range: "R$ 50k - 200k",
-    cor: "bg-yellow-100 text-yellow-800",
-    usuarios: 856,
-    descricao: "Acelerando o crescimento patrimonial",
-    beneficios: ["Mentoria em grupo", "Análises de mercado", "Networking exclusivo"],
-    proximoGrupo: "Investidor",
+    id: "3",
+    name: "Dividendos Premium",
+    description: "Estratégias avançadas para maximizar renda passiva através de dividendos. Grupo exclusivo.",
+    category: "strategy",
+    privacy: "private",
+    memberCount: 234,
+    maxMembers: 300,
+    isJoined: false,
+    isOwner: false,
+    avatar: "/placeholder.svg?height=60&width=60",
+    createdAt: "2024-01-20",
+    lastActivity: "1 hora atrás",
+    performance: 11.8,
+    tags: ["Dividendos", "Premium", "Renda Passiva"],
+    owner: {
+      name: "Ana Dividendos",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    topMembers: [
+      { name: "Miguel", avatar: "/placeholder.svg?height=32&width=32", performance: 13.2 },
+      { name: "Sofia", avatar: "/placeholder.svg?height=32&width=32", performance: 12.1 },
+      { name: "Diego", avatar: "/placeholder.svg?height=32&width=32", performance: 11.9 },
+    ],
   },
   {
-    nome: "Investidor",
-    icon: "💎",
-    range: "R$ 200k - 1M",
-    cor: "bg-blue-100 text-blue-800",
-    usuarios: 234,
-    descricao: "Investidor experiente e estratégico",
-    beneficios: ["Mentoria individual", "Oportunidades VIP", "Eventos exclusivos"],
-    proximoGrupo: "Magnata",
-  },
-  {
-    nome: "Magnata",
-    icon: "👑",
-    range: "R$ 1M - 10M",
-    cor: "bg-purple-100 text-purple-800",
-    usuarios: 45,
-    descricao: "Elite dos investidores",
-    beneficios: ["Acesso a fundos exclusivos", "Consultoria personalizada", "Rede de contatos premium"],
-    proximoGrupo: "Titã",
-  },
-  {
-    nome: "Titã",
-    icon: "🏆",
-    range: "R$ 10M+",
-    cor: "bg-red-100 text-red-800",
-    usuarios: 8,
-    descricao: "O topo da pirâmide financeira",
-    beneficios: ["Gestão patrimonial completa", "Oportunidades únicas", "Legado e filantropia"],
-    proximoGrupo: null,
+    id: "4",
+    name: "Meu Grupo VIP",
+    description: "Grupo privado que criei para compartilhar minhas melhores estratégias com investidores selecionados.",
+    category: "advanced",
+    privacy: "private",
+    memberCount: 45,
+    maxMembers: 50,
+    isJoined: true,
+    isOwner: true,
+    avatar: "/placeholder.svg?height=60&width=60",
+    createdAt: "2024-02-10",
+    lastActivity: "15 minutos atrás",
+    performance: 22.1,
+    tags: ["VIP", "Estratégias Avançadas", "Exclusivo"],
+    owner: {
+      name: "Você",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    topMembers: [
+      { name: "Ricardo", avatar: "/placeholder.svg?height=32&width=32", performance: 25.3 },
+      { name: "Juliana", avatar: "/placeholder.svg?height=32&width=32", performance: 23.8 },
+      { name: "Marcos", avatar: "/placeholder.svg?height=32&width=32", performance: 21.5 },
+    ],
   },
 ]
 
 export default function GroupsPage() {
-  const { user } = useApp()
+  const [groups, setGroups] = useState<Group[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("all")
 
-  if (!user) return null
+  useEffect(() => {
+    // Simular carregamento
+    setTimeout(() => {
+      setGroups(mockGroups)
+      setLoading(false)
+    }, 1500)
+  }, [])
 
-  const grupoAtual = gruposInfo.find((g) => g.nome === user.grupo)
-  const indexGrupoAtual = gruposInfo.findIndex((g) => g.nome === user.grupo)
-  const proximoGrupo = indexGrupoAtual < gruposInfo.length - 1 ? gruposInfo[indexGrupoAtual + 1] : null
+  const filteredGroups = groups.filter((group) => {
+    const matchesSearch =
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase())
 
-  const getProgressoProximoGrupo = () => {
-    if (!proximoGrupo) return 100
+    if (activeTab === "all") return matchesSearch
+    if (activeTab === "joined") return matchesSearch && group.isJoined
+    if (activeTab === "owned") return matchesSearch && group.isOwner
+    if (activeTab === "public") return matchesSearch && group.privacy === "public"
 
-    const ranges = {
-      Construtor: { min: 10000, max: 50000 },
-      Acelerador: { min: 50000, max: 200000 },
-      Investidor: { min: 200000, max: 1000000 },
-      Magnata: { min: 1000000, max: 10000000 },
-      Titã: { min: 10000000, max: 100000000 },
+    return matchesSearch
+  })
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "beginner":
+        return "bg-green-100 text-green-800"
+      case "intermediate":
+        return "bg-blue-100 text-blue-800"
+      case "advanced":
+        return "bg-purple-100 text-purple-800"
+      case "sector":
+        return "bg-orange-100 text-orange-800"
+      case "strategy":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
+  }
 
-    const range = ranges[proximoGrupo.nome as keyof typeof ranges]
-    if (!range) return 0
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "beginner":
+        return "Iniciante"
+      case "intermediate":
+        return "Intermediário"
+      case "advanced":
+        return "Avançado"
+      case "sector":
+        return "Setor"
+      case "strategy":
+        return "Estratégia"
+      default:
+        return category
+    }
+  }
 
-    return Math.min(((user.patrimonio - (range.min - 1)) / (range.min - (grupoAtual ? 0 : 0))) * 100, 100)
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+        <div className="space-y-2">
+          <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <GroupCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1a237e]">Grupos</h1>
-          <p className="text-gray-600 mt-1">Descubra os grupos por patrimônio e veja como evoluir</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">👥</div>
+            <h1 className="text-2xl font-bold text-gray-900">Grupos</h1>
+          </div>
+          <p className="text-base text-gray-600">Conecte-se com outros investidores e compartilhe estratégias</p>
         </div>
-        {grupoAtual && (
-          <Card className="bg-gradient-to-r from-[#1a237e] to-[#3949ab] text-white">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-1">{grupoAtual.icon}</div>
-              <div className="font-bold">{grupoAtual.nome}</div>
-            </CardContent>
-          </Card>
-        )}
+        <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-3">
+          <Plus className="h-4 w-4 mr-2" />
+          Criar Grupo
+        </Button>
       </div>
 
-      {/* Progresso para o Próximo Grupo */}
-      {proximoGrupo && (
-        <Card className="bg-gradient-to-r from-[#ff5722] to-[#ff9800] text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Target className="h-5 w-5 mr-2" />
-              Próximo Objetivo: Grupo {proximoGrupo.nome}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span>Patrimônio atual: R$ {user.patrimonio.toLocaleString()}</span>
-                <span>Meta: R$ {proximoGrupo.range.split(" - ")[0].replace("R$ ", "").replace("k", "000")}</span>
-              </div>
-              <Progress value={getProgressoProximoGrupo()} className="bg-white/20" />
-              <p className="text-sm opacity-90">
-                Faltam R${" "}
-                {(
-                  Number.parseInt(proximoGrupo.range.split(" - ")[0].replace("R$ ", "").replace("k", "000")) -
-                  user.patrimonio
-                ).toLocaleString()}{" "}
-                para o próximo grupo
-              </p>
+      {/* Search and Filters */}
+      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar grupos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 text-base border-gray-300 focus:border-orange-400 focus:ring-orange-400"
+              />
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Lista de Grupos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {gruposInfo.map((grupo, index) => (
-          <Card
-            key={grupo.nome}
-            className={`hover:shadow-xl transition-all duration-300 ${
-              grupo.nome === user.grupo
-                ? "ring-2 ring-[#ff5722] bg-orange-50"
-                : index <= indexGrupoAtual
-                  ? "opacity-60"
-                  : ""
-            }`}
-          >
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="text-4xl">{grupo.icon}</div>
-                <Badge className={grupo.cor}>{grupo.usuarios.toLocaleString()} membros</Badge>
-              </div>
-              <CardTitle className="text-[#1a237e] flex items-center">
-                {grupo.nome}
-                {grupo.nome === user.grupo && <Badge className="ml-2 bg-[#ff5722] text-white">Seu Grupo</Badge>}
-              </CardTitle>
-              <CardDescription>
-                <div className="font-medium text-lg">{grupo.range}</div>
-                <div className="mt-1">{grupo.descricao}</div>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-medium text-[#1a237e] mb-2">Benefícios:</h4>
-                <ul className="space-y-1">
-                  {grupo.beneficios.map((beneficio, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-[#ff5722]" />
-                      {beneficio}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm rounded-lg p-1">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Todos
+          </TabsTrigger>
+          <TabsTrigger value="joined" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Meus Grupos
+          </TabsTrigger>
+          <TabsTrigger value="owned" className="flex items-center gap-2">
+            <Crown className="h-4 w-4" />
+            Criados por Mim
+          </TabsTrigger>
+          <TabsTrigger value="public" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Públicos
+          </TabsTrigger>
+        </TabsList>
 
-              {grupo.nome === user.grupo ? (
-                <Button className="w-full bg-[#ff5722] hover:bg-[#e64a19]">
-                  <Crown className="h-4 w-4 mr-2" />
-                  Seu Grupo Atual
-                </Button>
-              ) : index > indexGrupoAtual ? (
-                <Button variant="outline" className="w-full bg-transparent">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Meta Futura
-                </Button>
-              ) : (
-                <Button variant="secondary" className="w-full" disabled>
-                  Grupo Anterior
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Estatísticas dos Grupos */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-[#1a237e] flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            Distribuição da Comunidade
-          </CardTitle>
-          <CardDescription>Veja como os membros estão distribuídos pelos grupos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {gruposInfo.map((grupo) => (
-              <div key={grupo.nome} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{grupo.icon}</span>
-                  <div>
-                    <span className="font-medium">{grupo.nome}</span>
-                    <span className="text-sm text-gray-600 ml-2">{grupo.range}</span>
+        <TabsContent value={activeTab} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredGroups.map((group) => (
+              <Card
+                key={group.id}
+                className={`bg-white shadow-lg rounded-xl border transition-all hover:shadow-xl ${
+                  group.isJoined ? "border-orange-200 bg-orange-50" : "border-gray-100"
+                }`}
+              >
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={group.avatar || "/placeholder.svg"} alt={group.name} />
+                        <AvatarFallback className="bg-orange-100 text-orange-600 font-semibold">
+                          {group.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          {group.name}
+                          {group.privacy === "private" && <Lock className="h-4 w-4 text-gray-400" />}
+                          {group.isOwner && <Crown className="h-4 w-4 text-yellow-500" />}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getCategoryColor(group.category)}>{getCategoryLabel(group.category)}</Badge>
+                          {group.performance > 0 && (
+                            <div className="flex items-center gap-1 text-sm text-green-600">
+                              <TrendingUp className="h-3 w-3" />+{group.performance}%
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-[#1a237e]">{grupo.usuarios.toLocaleString()}</div>
-                  <div className="text-xs text-gray-600">membros</div>
-                </div>
-              </div>
+
+                  <p className="text-base text-gray-600 line-clamp-2">{group.description}</p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {group.memberCount}/{group.maxMembers}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="h-4 w-4" />
+                        {group.lastActivity}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {group.topMembers.slice(0, 3).map((member, index) => (
+                        <Avatar key={index} className="h-8 w-8 border-2 border-white">
+                          <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
+                          <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+                            {member.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">+{group.memberCount - 3} membros</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {group.tags.slice(0, 3).map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs border-gray-300 text-gray-600">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={group.owner.avatar || "/placeholder.svg"} alt={group.owner.name} />
+                        <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+                          {group.owner.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>por {group.owner.name}</span>
+                    </div>
+
+                    {group.isOwner ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Gerenciar
+                      </Button>
+                    ) : group.isJoined ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-transparent"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Entrar
+                      </Button>
+                    ) : (
+                      <Button size="sm" className="bg-orange-400 hover:bg-orange-500 text-white font-medium">
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        {group.privacy === "private" ? "Solicitar" : "Participar"}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Dicas para Evoluir */}
-      <Card className="bg-gradient-to-r from-[#1a237e] to-[#3949ab] text-white">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2" />
-            Como Evoluir de Grupo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold mb-3">💰 Aumente seu patrimônio</h4>
-              <ul className="space-y-2 text-sm opacity-90">
-                <li>• Invista regularmente</li>
-                <li>• Controle seus gastos</li>
-                <li>• Busque fontes de renda extra</li>
-                <li>• Reinvista os rendimentos</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">🎯 Complete missões</h4>
-              <ul className="space-y-2 text-sm opacity-90">
-                <li>• Missões dão XP e disciplina</li>
-                <li>• Mantenha seu streak ativo</li>
-                <li>• Participe da comunidade</li>
-                <li>• Compartilhe suas conquistas</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          {filteredGroups.length === 0 && (
+            <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+              <CardContent className="p-12 text-center">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Nenhum grupo encontrado</h3>
+                <p className="text-base text-gray-600 mb-6">Tente ajustar seus filtros ou criar um novo grupo</p>
+                <Button className="bg-orange-400 hover:bg-orange-500 text-white font-medium px-6 py-3">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Novo Grupo
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

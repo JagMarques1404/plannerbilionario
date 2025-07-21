@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, RefreshCw, DollarSign, BarChart3 } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
 
 interface MarketData {
   symbol: string
@@ -12,152 +11,89 @@ interface MarketData {
   price: number
   change: number
   changePercent: number
-  volume: number
 }
 
-const mockMarketData: MarketData[] = [
-  {
-    symbol: "BILLION",
-    name: "Julius Token",
-    price: 1.0,
-    change: 0.05,
-    changePercent: 5.26,
-    volume: 1250000,
-  },
-  {
-    symbol: "IBOV",
-    name: "Ibovespa",
-    price: 125430,
-    change: 1250,
-    changePercent: 1.01,
-    volume: 8500000000,
-  },
-  {
-    symbol: "PETR4",
-    name: "Petrobras",
-    price: 32.45,
-    change: -0.85,
-    changePercent: -2.55,
-    volume: 45000000,
-  },
-  {
-    symbol: "VALE3",
-    name: "Vale",
-    price: 65.2,
-    change: 1.2,
-    changePercent: 1.87,
-    volume: 32000000,
-  },
-]
-
 export function MarketWidget() {
-  const [marketData, setMarketData] = useState<MarketData[]>(mockMarketData)
-  const [isLoading, setIsLoading] = useState(false)
-  const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [marketData, setMarketData] = useState<MarketData[]>([
+    { symbol: "PETR4", name: "Petrobras", price: 32.45, change: 1.23, changePercent: 3.94 },
+    { symbol: "VALE3", name: "Vale", price: 68.9, change: -2.1, changePercent: -2.95 },
+    { symbol: "ITUB4", name: "Itaú", price: 28.76, change: 0.45, changePercent: 1.59 },
+    { symbol: "BBDC4", name: "Bradesco", price: 15.23, change: -0.32, changePercent: -2.06 },
+    { symbol: "ABEV3", name: "Ambev", price: 12.89, change: 0.78, changePercent: 6.44 },
+  ])
 
-  const updateMarketData = () => {
-    setIsLoading(true)
+  const [loading, setLoading] = useState(false)
 
-    // Simular atualização dos dados
-    setTimeout(() => {
-      setMarketData((prev) =>
-        prev.map((item) => ({
-          ...item,
-          price: item.price + (Math.random() - 0.5) * (item.price * 0.02),
-          change: (Math.random() - 0.5) * (item.price * 0.05),
-          changePercent: (Math.random() - 0.5) * 5,
-          volume: Math.floor(item.volume * (0.8 + Math.random() * 0.4)),
-        })),
-      )
-      setLastUpdate(new Date())
-      setIsLoading(false)
-    }, 1500)
-  }
-
-  // Auto-update a cada 30 segundos
   useEffect(() => {
-    const interval = setInterval(updateMarketData, 30000)
+    // Simular atualizações em tempo real
+    const interval = setInterval(() => {
+      setMarketData((prev) =>
+        prev.map((stock) => {
+          const volatility = (Math.random() - 0.5) * 0.1 // -5% a +5%
+          const newPrice = stock.price * (1 + volatility)
+          const change = newPrice - stock.price
+          const changePercent = (change / stock.price) * 100
+
+          return {
+            ...stock,
+            price: Math.max(newPrice, 0.01),
+            change: Number.parseFloat(change.toFixed(2)),
+            changePercent: Number.parseFloat(changePercent.toFixed(2)),
+          }
+        }),
+      )
+    }, 5000) // Atualizar a cada 5 segundos
+
     return () => clearInterval(interval)
   }, [])
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value)
+  }
+
+  const formatPercent = (value: number) => {
+    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+  }
+
   return (
-    <Card className="card-premium border-0">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-gray-900 flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2 text-blue-500" />
-              Mercado em Tempo Real
-            </CardTitle>
-            <CardDescription>Última atualização: {lastUpdate.toLocaleTimeString()}</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={updateMarketData}
-            disabled={isLoading}
-            className="rounded-xl bg-transparent"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
-        </div>
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <DollarSign className="h-5 w-5 text-green-600" />
+          Mercado em Tempo Real
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {marketData.map((item) => (
-            <div
-              key={item.symbol}
-              className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-2xl border"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">{item.symbol}</h4>
-                  <p className="text-sm text-gray-600">{item.name}</p>
-                </div>
+      <CardContent className="space-y-3">
+        {marketData.map((stock) => (
+          <div
+            key={stock.symbol}
+            className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-gray-900">{stock.symbol}</span>
+                <span className="text-sm text-gray-600">{stock.name}</span>
               </div>
-
-              <div className="text-right">
-                <div className="font-bold text-lg text-gray-900">
-                  {item.symbol === "BILLION" ? "$" : "R$"}{" "}
-                  {item.price.toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    className={item.changePercent >= 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
-                  >
-                    {item.changePercent >= 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {item.changePercent >= 0 ? "+" : ""}
-                    {item.changePercent.toFixed(2)}%
-                  </Badge>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Vol: {item.volume.toLocaleString()}</div>
-              </div>
+              <div className="text-lg font-bold text-gray-900">{formatCurrency(stock.price)}</div>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-semibold text-gray-900">$BILLION Token</h4>
-              <p className="text-sm text-gray-600">Token oficial da plataforma</p>
-            </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">$ {marketData[0]?.price.toFixed(4)}</div>
-              <Badge className="bg-blue-500 text-white">Ativo Nativo</Badge>
+              <div className={`flex items-center gap-1 ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {stock.change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                <span className="font-semibold">{formatCurrency(Math.abs(stock.change))}</span>
+              </div>
+              <Badge variant={stock.changePercent >= 0 ? "default" : "destructive"} className="mt-1">
+                {formatPercent(stock.changePercent)}
+              </Badge>
             </div>
           </div>
+        ))}
+
+        <div className="pt-2 border-t">
+          <p className="text-xs text-gray-500 text-center">Dados simulados • Atualização automática a cada 5s</p>
         </div>
       </CardContent>
     </Card>

@@ -1,209 +1,330 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Target, Clock, Calendar, Trophy, CheckCircle, Star } from "lucide-react"
-import { useApp } from "@/contexts/app-context"
+import { Target, Trophy, Star, Clock, CheckCircle, Lock, Gift, Zap } from "lucide-react"
+import { MissionsSkeleton } from "@/components/loading-skeleton"
+
+interface Mission {
+  id: string
+  title: string
+  description: string
+  category: "daily" | "weekly" | "achievement" | "special"
+  difficulty: "easy" | "medium" | "hard"
+  reward: number
+  progress: number
+  maxProgress: number
+  completed: boolean
+  locked: boolean
+  icon: string
+  timeLeft?: string
+}
+
+const mockMissions: Mission[] = [
+  {
+    id: "1",
+    title: "Primeira Operação",
+    description: "Execute sua primeira operação de compra ou venda",
+    category: "daily",
+    difficulty: "easy",
+    reward: 100,
+    progress: 1,
+    maxProgress: 1,
+    completed: true,
+    locked: false,
+    icon: "🎯",
+  },
+  {
+    id: "2",
+    title: "Streak de 7 Dias",
+    description: "Mantenha-se ativo por 7 dias consecutivos",
+    category: "weekly",
+    difficulty: "medium",
+    reward: 500,
+    progress: 4,
+    maxProgress: 7,
+    completed: false,
+    locked: false,
+    icon: "🔥",
+    timeLeft: "3 dias",
+  },
+  {
+    id: "3",
+    title: "Mestre dos Dividendos",
+    description: "Receba dividendos de 10 empresas diferentes",
+    category: "achievement",
+    difficulty: "hard",
+    reward: 1000,
+    progress: 3,
+    maxProgress: 10,
+    completed: false,
+    locked: false,
+    icon: "💰",
+  },
+  {
+    id: "4",
+    title: "Social Trader",
+    description: "Siga 5 investidores experientes",
+    category: "daily",
+    difficulty: "easy",
+    reward: 200,
+    progress: 2,
+    maxProgress: 5,
+    completed: false,
+    locked: false,
+    icon: "👥",
+  },
+  {
+    id: "5",
+    title: "Análise Técnica",
+    description: "Complete o curso de análise técnica",
+    category: "special",
+    difficulty: "hard",
+    reward: 2000,
+    progress: 0,
+    maxProgress: 1,
+    completed: false,
+    locked: true,
+    icon: "📊",
+  },
+  {
+    id: "6",
+    title: "Diversificação",
+    description: "Invista em 5 setores diferentes",
+    category: "weekly",
+    difficulty: "medium",
+    reward: 750,
+    progress: 1,
+    maxProgress: 5,
+    completed: false,
+    locked: false,
+    icon: "🎲",
+  },
+]
 
 export default function MissionsPage() {
-  const { missions, completeMission, user } = useApp()
-  const [selectedCategory, setSelectedCategory] = useState("todas")
+  const [missions, setMissions] = useState<Mission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("all")
 
-  const filteredMissions =
-    selectedCategory === "todas" ? missions : missions.filter((m) => m.categoria === selectedCategory)
+  useEffect(() => {
+    // Simular carregamento
+    setTimeout(() => {
+      setMissions(mockMissions)
+      setLoading(false)
+    }, 1500)
+  }, [])
 
-  const getCategoryIcon = (categoria: string) => {
-    switch (categoria) {
-      case "diaria":
-        return <Clock className="h-4 w-4" />
-      case "semanal":
-        return <Calendar className="h-4 w-4" />
-      case "mensal":
-        return <Trophy className="h-4 w-4" />
-      default:
-        return <Target className="h-4 w-4" />
-    }
-  }
+  const filteredMissions = missions.filter((mission) => {
+    if (activeTab === "all") return true
+    return mission.category === activeTab
+  })
 
-  const getCategoryColor = (categoria: string) => {
-    switch (categoria) {
-      case "diaria":
+  const completedMissions = missions.filter((m) => m.completed).length
+  const totalRewards = missions.filter((m) => m.completed).reduce((sum, m) => sum + m.reward, 0)
+  const currentStreak = 4
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
         return "bg-green-100 text-green-800"
-      case "semanal":
-        return "bg-blue-100 text-blue-800"
-      case "mensal":
-        return "bg-purple-100 text-purple-800"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800"
+      case "hard":
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const missoesConcluidas = missions.filter((m) => m.concluida).length
-  const totalMissoes = missions.length
-  const xpTotal = missions.filter((m) => m.concluida).reduce((acc, m) => acc + m.xp, 0)
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "daily":
+        return <Target className="h-4 w-4" />
+      case "weekly":
+        return <Clock className="h-4 w-4" />
+      case "achievement":
+        return <Trophy className="h-4 w-4" />
+      case "special":
+        return <Star className="h-4 w-4" />
+      default:
+        return <Target className="h-4 w-4" />
+    }
+  }
+
+  if (loading) {
+    return <MissionsSkeleton />
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1a237e]">Missões</h1>
-          <p className="text-gray-600 mt-1">Complete missões para ganhar XP e subir no ranking</p>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">🎯</div>
+          <h1 className="text-2xl font-bold text-gray-900">Missões</h1>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-[#ff5722]">{user?.xp.toLocaleString()} XP</div>
-          <p className="text-sm text-gray-600">Total acumulado</p>
-        </div>
+        <p className="text-base text-gray-600">Complete missões para ganhar recompensas e subir no ranking</p>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Missões Concluídas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {missoesConcluidas}/{totalMissoes}
+      {/* Progress Overview */}
+      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-orange-500" />
+            Progresso Geral
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-base text-gray-600">Missões Completadas</span>
+            <span className="text-lg font-semibold text-gray-900">
+              {completedMissions}/{missions.length}
+            </span>
+          </div>
+          <Progress value={(completedMissions / missions.length) * 100} className="h-2" />
+          <div className="grid grid-cols-3 gap-4 pt-2">
+            <div className="text-center">
+              <div className="text-xl font-bold text-orange-500">{totalRewards}</div>
+              <div className="text-sm text-gray-600">Pontos Ganhos</div>
             </div>
-            <Progress value={(missoesConcluidas / totalMissoes) * 100} className="mt-2" />
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <div className="text-xl font-bold text-blue-500">{currentStreak}</div>
+              <div className="text-sm text-gray-600">Dias de Streak</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-green-500">{completedMissions}</div>
+              <div className="text-sm text-gray-600">Completadas</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">XP das Missões</CardTitle>
-            <Star className="h-4 w-4 text-[#ff5722]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#ff5722]">{xpTotal.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">De missões completadas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Streak Atual</CardTitle>
-            <Target className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">{user?.streak} dias</div>
-            <p className="text-xs text-muted-foreground">Continue assim! 🔥</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros */}
-      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="todas">Todas</TabsTrigger>
-          <TabsTrigger value="diaria">Diárias</TabsTrigger>
-          <TabsTrigger value="semanal">Semanais</TabsTrigger>
-          <TabsTrigger value="mensal">Mensais</TabsTrigger>
+      {/* Mission Categories */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm rounded-lg p-1">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Todas
+          </TabsTrigger>
+          <TabsTrigger value="daily" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Diárias
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Semanais
+          </TabsTrigger>
+          <TabsTrigger value="achievement" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Conquistas
+          </TabsTrigger>
+          <TabsTrigger value="special" className="flex items-center gap-2">
+            <Star className="h-4 w-4" />
+            Especiais
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={selectedCategory} className="mt-6">
+        <TabsContent value={activeTab} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMissions.map((mission) => (
               <Card
                 key={mission.id}
-                className={`hover:shadow-lg transition-all ${
-                  mission.concluida ? "bg-green-50 border-green-200" : "hover:-translate-y-1"
+                className={`bg-white shadow-lg rounded-xl border transition-all hover:shadow-xl ${
+                  mission.completed
+                    ? "border-green-200 bg-green-50"
+                    : mission.locked
+                      ? "border-gray-200 opacity-60"
+                      : "border-gray-100"
                 }`}
               >
-                <CardHeader>
+                <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge className={getCategoryColor(mission.categoria)}>
-                      {getCategoryIcon(mission.categoria)}
-                      <span className="ml-1 capitalize">{mission.categoria}</span>
-                    </Badge>
-                    <Badge variant="secondary">+{mission.xp} XP</Badge>
+                    <div className="text-2xl">{mission.icon}</div>
+                    <div className="flex items-center gap-2">
+                      {mission.completed && <CheckCircle className="h-5 w-5 text-green-500" />}
+                      {mission.locked && <Lock className="h-5 w-5 text-gray-400" />}
+                      <Badge className={getDifficultyColor(mission.difficulty)}>
+                        {mission.difficulty === "easy"
+                          ? "Fácil"
+                          : mission.difficulty === "medium"
+                            ? "Médio"
+                            : "Difícil"}
+                      </Badge>
+                    </div>
                   </div>
-                  <CardTitle className="text-lg text-[#1a237e]">{mission.titulo}</CardTitle>
-                  <CardDescription>{mission.descricao}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Progresso</span>
-                      <span>
-                        {mission.progresso}/{mission.meta}
-                      </span>
-                    </div>
-                    <Progress value={(mission.progresso / mission.meta) * 100} className="h-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">{mission.title}</h3>
+                    <p className="text-base text-gray-600">{mission.description}</p>
                   </div>
 
-                  {mission.prazo && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="h-4 w-4 mr-1" />
-                      Prazo: {new Date(mission.prazo).toLocaleDateString()}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getCategoryIcon(mission.category)}
+                      <span className="text-sm text-gray-600 capitalize">{mission.category}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Gift className="h-4 w-4 text-orange-500" />
+                      <span className="text-base font-semibold text-orange-500">{mission.reward}</span>
+                    </div>
+                  </div>
+
+                  {!mission.completed && !mission.locked && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Progresso</span>
+                        <span className="font-medium text-gray-900">
+                          {mission.progress}/{mission.maxProgress}
+                        </span>
+                      </div>
+                      <Progress value={(mission.progress / mission.maxProgress) * 100} className="h-2" />
+                      {mission.timeLeft && (
+                        <div className="flex items-center gap-1 text-sm text-orange-600">
+                          <Clock className="h-3 w-3" />
+                          {mission.timeLeft} restantes
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {mission.concluida ? (
-                    <div className="flex items-center text-green-600 font-medium">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Missão Concluída!
-                    </div>
-                  ) : mission.progresso === mission.meta ? (
-                    <Button
-                      onClick={() => completeMission(mission.id)}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Concluir Missão
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="w-full bg-transparent">
-                      Continuar Missão
-                    </Button>
-                  )}
+                  <Button
+                    className={`w-full font-medium ${
+                      mission.completed
+                        ? "bg-green-500 hover:bg-green-600 text-white"
+                        : mission.locked
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          : "bg-orange-400 hover:bg-orange-500 text-white"
+                    }`}
+                    disabled={mission.completed || mission.locked}
+                  >
+                    {mission.completed ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Completada
+                      </>
+                    ) : mission.locked ? (
+                      <>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Bloqueada
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Iniciar
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Missões Sugeridas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-[#1a237e]">Missões Sugeridas para Você</CardTitle>
-          <CardDescription>Baseado no seu perfil e dificuldades declaradas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-              <h4 className="font-medium text-[#1a237e] mb-2">📱 Baixe um app de controle financeiro</h4>
-              <p className="text-sm text-gray-600 mb-3">
-                Instale e configure um aplicativo para acompanhar seus gastos diários
-              </p>
-              <div className="flex items-center justify-between">
-                <Badge className="bg-blue-100 text-blue-800">+150 XP</Badge>
-                <Button size="sm" variant="outline">
-                  Aceitar
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-              <h4 className="font-medium text-[#1a237e] mb-2">📚 Assista a um vídeo sobre investimentos</h4>
-              <p className="text-sm text-gray-600 mb-3">Complete um curso básico sobre como começar a investir</p>
-              <div className="flex items-center justify-between">
-                <Badge className="bg-purple-100 text-purple-800">+250 XP</Badge>
-                <Button size="sm" variant="outline">
-                  Aceitar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
