@@ -1,302 +1,227 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format, parseISO, isValid } from "date-fns"
+import type { Goal, DailyTask, UserLevel } from "@/types/database"
+import { USER_LEVELS, POINTS, DATE_FORMATS } from "./constants"
 
+// Tailwind utility function
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value)
-}
-
-export function calculateXpProgress(
-  currentXp: number,
-  level: number,
-): { progress: number; nextLevelXp: number; currentLevelXp: number } {
-  const currentLevelXp = level * 1000
-  const nextLevelXp = (level + 1) * 1000
-  const progress = ((currentXp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100
-
-  return {
-    progress: Math.max(0, Math.min(100, progress)),
-    nextLevelXp,
-    currentLevelXp,
+// Date utilities
+export function formatDate(date: string | Date, formatStr: string = DATE_FORMATS.DISPLAY): string {
+  try {
+    const dateObj = typeof date === "string" ? parseISO(date) : date
+    if (!isValid(dateObj)) return "Invalid date"
+    return format(dateObj, formatStr)
+  } catch {
+    return "Invalid date"
   }
 }
 
-export function calculateProgress(current: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((current / total) * 100)
-}
-
-export function calculateCategoryProgress(completed: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((completed / total) * 100)
-}
-
-export function formatTimeEstimate(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`
-  } else if (minutes < 1440) {
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`
-  } else {
-    const days = Math.floor(minutes / 1440)
-    const remainingHours = Math.floor((minutes % 1440) / 60)
-    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`
+export function isDatePast(date: string | Date): boolean {
+  try {
+    const dateObj = typeof date === "string" ? parseISO(date) : date
+    return isValid(dateObj) && dateObj < new Date()
+  } catch {
+    return false
   }
 }
 
-export function getPriorityColor(priority: string): string {
-  switch (priority.toLowerCase()) {
-    case "alta":
-    case "high":
-      return "text-red-600 bg-red-50 border-red-200"
-    case "média":
-    case "medium":
-      return "text-yellow-600 bg-yellow-50 border-yellow-200"
-    case "baixa":
-    case "low":
-      return "text-green-600 bg-green-50 border-green-200"
-    default:
-      return "text-gray-600 bg-gray-50 border-gray-200"
+export function getDaysUntilDeadline(deadline: string | Date): number {
+  try {
+    const deadlineDate = typeof deadline === "string" ? parseISO(deadline) : deadline
+    if (!isValid(deadlineDate)) return 0
+
+    const today = new Date()
+    const diffTime = deadlineDate.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  } catch {
+    return 0
   }
 }
 
-export function getJewelryLevel(level: number): { name: string; color: string; icon: string } {
-  if (level >= 100) return { name: "Diamante", color: "text-blue-600", icon: "💎" }
-  if (level >= 75) return { name: "Platina", color: "text-gray-400", icon: "🏆" }
-  if (level >= 50) return { name: "Ouro", color: "text-yellow-500", icon: "🥇" }
-  if (level >= 25) return { name: "Prata", color: "text-gray-500", icon: "🥈" }
-  return { name: "Bronze", color: "text-orange-600", icon: "🥉" }
+// User utilities
+export function getUserLevel(points: number): UserLevel {
+  for (const [level, config] of Object.entries(USER_LEVELS)) {
+    if (points >= config.minPoints && points <= config.maxPoints) {
+      return level as UserLevel
+    }
+  }
+  return "Beginner"
 }
 
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
+export function getPointsToNextLevel(currentPoints: number): number {
+  const currentLevel = getUserLevel(currentPoints)
+  const levels = Object.entries(USER_LEVELS)
+  const currentIndex = levels.findIndex(([level]) => level === currentLevel)
+
+  if (currentIndex === -1 || currentIndex === levels.length - 1) return 0
+
+  const nextLevel = levels[currentIndex + 1][1]
+  return nextLevel.minPoints - currentPoints
+}
+
+export function calculateLevelProgress(points: number): number {
+  const currentLevel = getUserLevel(points)
+  const levelConfig = USER_LEVELS[currentLevel]
+
+  if (levelConfig.maxPoints === Number.POSITIVE_INFINITY) return 100
+
+  const progress = ((points - levelConfig.minPoints) / (levelConfig.maxPoints - levelConfig.minPoints)) * 100
+  return Math.min(Math.max(progress, 0), 100)
+}
+
+// Goal utilities
+export function calculateGoalProgress(goal: Goal): number {
+  if (goal.target_value === 0) return 0
+  return Math.min((goal.current_value / goal.target_value) * 100, 100)
+}
+
+export function getGoalStatus(goal: Goal): "on-track" | "behind" | "completed" | "overdue" {
+  if (goal.status === "completed") return "completed"
+
+  const progress = calculateGoalProgress(goal)
+  const daysUntil = getDaysUntilDeadline(goal.deadline)
+
+  if (daysUntil < 0) return "overdue"
+  if (progress >= 100) return "completed"
+  if (progress >= 75) return "on-track"
+  return "behind"
+}
+
+// Task utilities
+export function calculateTaskCompletionRate(tasks: DailyTask[]): number {
+  if (tasks.length === 0) return 0
+  const completedTasks = tasks.filter((task) => task.completed).length
+  return (completedTasks / tasks.length) * 100
+}
+
+export function getTaskPoints(category: string): number {
+  return POINTS.TASK_COMPLETION[category as keyof typeof POINTS.TASK_COMPLETION] || 50
+}
+
+// Number utilities
+export function formatCurrency(amount: number, currency = "USD"): string {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "BRL",
-  }).format(value)
+    currency,
+  }).format(amount)
 }
 
-export function formatPercentage(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  }).format(value / 100)
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat("en-US").format(num)
 }
 
-export function formatDate(date: Date | string): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(dateObj)
+export function formatPercentage(value: number, decimals = 1): string {
+  return `${value.toFixed(decimals)}%`
 }
 
-export function formatDateTime(date: Date | string): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(dateObj)
+// String utilities
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + "..."
 }
 
-export function formatRelativeTime(date: Date | string): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return "agora"
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60)
-    return `${minutes} min atrás`
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600)
-    return `${hours}h atrás`
-  } else {
-    const days = Math.floor(diffInSeconds / 86400)
-    return `${days}d atrás`
-  }
-}
-
-export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
-}
-
-export function calculateLevel(xp: number): number {
-  return Math.floor(xp / 1000) + 1
-}
-
-export function calculateXpForNextLevel(currentXp: number): number {
-  const currentLevel = calculateLevel(currentXp)
-  return currentLevel * 1000 - currentXp
-}
-
-export function getProgressPercentage(currentXp: number): number {
-  const currentLevel = calculateLevel(currentXp)
-  const xpForCurrentLevel = (currentLevel - 1) * 1000
-  const xpForNextLevel = currentLevel * 1000
-  const progressXp = currentXp - xpForCurrentLevel
-  const totalXpNeeded = xpForNextLevel - xpForCurrentLevel
-  return Math.round((progressXp / totalXpNeeded) * 100)
+export function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
 }
 
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return text.substring(0, maxLength).trim() + "..."
-}
-
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null
-
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
-}
-
-export function throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void {
-  let inThrottle = false
-
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args)
-      inThrottle = true
-      setTimeout(() => (inThrottle = false), limit)
-    }
-  }
-}
-
+// Validation utilities
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
-export function isValidCPF(cpf: string): boolean {
-  const cleanCPF = cpf.replace(/[^\d]/g, "")
-
-  if (cleanCPF.length !== 11) return false
-  if (/^(\d)\1{10}$/.test(cleanCPF)) return false
-
-  let sum = 0
-  for (let i = 0; i < 9; i++) {
-    sum += Number.parseInt(cleanCPF.charAt(i)) * (10 - i)
-  }
-  let remainder = (sum * 10) % 11
-  if (remainder === 10 || remainder === 11) remainder = 0
-  if (remainder !== Number.parseInt(cleanCPF.charAt(9))) return false
-
-  sum = 0
-  for (let i = 0; i < 10; i++) {
-    sum += Number.parseInt(cleanCPF.charAt(i)) * (11 - i)
-  }
-  remainder = (sum * 10) % 11
-  if (remainder === 10 || remainder === 11) remainder = 0
-  if (remainder !== Number.parseInt(cleanCPF.charAt(10))) return false
-
-  return true
+export function isValidPassword(password: string): boolean {
+  return password.length >= 8
 }
 
-export function formatCPF(cpf: string): string {
-  const cleanCPF = cpf.replace(/[^\d]/g, "")
-  return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
-}
+export function validateGoal(goal: Partial<Goal>): string[] {
+  const errors: string[] = []
 
-export function formatPhone(phone: string): string {
-  const cleanPhone = phone.replace(/[^\d]/g, "")
-  if (cleanPhone.length === 11) {
-    return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
-  } else if (cleanPhone.length === 10) {
-    return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3")
-  }
-  return phone
-}
-
-export function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("")
-}
-
-export function calculateAge(birthDate: Date | string): number {
-  const birth = typeof birthDate === "string" ? new Date(birthDate) : birthDate
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--
+  if (!goal.title || goal.title.trim().length === 0) {
+    errors.push("Title is required")
   }
 
-  return age
+  if (goal.title && goal.title.length > 100) {
+    errors.push("Title must be less than 100 characters")
+  }
+
+  if (!goal.target_value || goal.target_value <= 0) {
+    errors.push("Target value must be greater than 0")
+  }
+
+  if (!goal.deadline) {
+    errors.push("Deadline is required")
+  } else if (isDatePast(goal.deadline)) {
+    errors.push("Deadline must be in the future")
+  }
+
+  return errors
 }
 
-export function getRandomColor(): string {
-  const colors = [
-    "#ef4444",
-    "#f97316",
-    "#f59e0b",
-    "#eab308",
-    "#84cc16",
-    "#22c55e",
-    "#10b981",
-    "#14b8a6",
-    "#06b6d4",
-    "#0ea5e9",
-    "#3b82f6",
-    "#6366f1",
-    "#8b5cf6",
-    "#a855f7",
-    "#d946ef",
-    "#ec4899",
-    "#f43f5e",
-  ]
-  return colors[Math.floor(Math.random() * colors.length)]
+// Array utilities
+export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
+  return array.reduce(
+    (groups, item) => {
+      const group = String(item[key])
+      groups[group] = groups[group] || []
+      groups[group].push(item)
+      return groups
+    },
+    {} as Record<string, T[]>,
+  )
 }
 
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+export function sortBy<T>(array: T[], key: keyof T, direction: "asc" | "desc" = "asc"): T[] {
+  return [...array].sort((a, b) => {
+    const aVal = a[key]
+    const bVal = b[key]
+
+    if (aVal < bVal) return direction === "asc" ? -1 : 1
+    if (aVal > bVal) return direction === "asc" ? 1 : -1
+    return 0
+  })
 }
 
-export function copyToClipboard(text: string): Promise<void> {
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(text)
-  } else {
-    const textArea = document.createElement("textarea")
-    textArea.value = text
-    textArea.style.position = "absolute"
-    textArea.style.left = "-999999px"
-    document.body.prepend(textArea)
-    textArea.select()
+// Local storage utilities
+export function getFromStorage<T>(key: string, defaultValue: T): T {
+  if (typeof window === "undefined") return defaultValue
 
-    try {
-      document.execCommand("copy")
-    } catch (error) {
-      console.error("Failed to copy text: ", error)
-    } finally {
-      textArea.remove()
-    }
+  try {
+    const item = window.localStorage.getItem(key)
+    return item ? JSON.parse(item) : defaultValue
+  } catch {
+    return defaultValue
+  }
+}
 
-    return Promise.resolve()
+export function setToStorage<T>(key: string, value: T): void {
+  if (typeof window === "undefined") return
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch (error) {
+    console.error("Error saving to localStorage:", error)
+  }
+}
+
+export function removeFromStorage(key: string): void {
+  if (typeof window === "undefined") return
+
+  try {
+    window.localStorage.removeItem(key)
+  } catch (error) {
+    console.error("Error removing from localStorage:", error)
   }
 }

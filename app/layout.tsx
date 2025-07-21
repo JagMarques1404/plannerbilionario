@@ -1,16 +1,13 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
-import { AppProvider } from "@/contexts/app-context"
-import { NotificationSystem } from "@/components/notification-system"
-import { SessionProvider } from "next-auth/react"
+import { Inter } from "next/font/google"
+import { Providers } from "./providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Julius Investidor - Desafio Bilionário",
-  description: "Plataforma gamificada de investimentos com missões, rankings e comunidade",
+export const metadata = {
+  title: "Julius Invest - Sandbox Mode",
+  description: "Plataforma de gamificação financeira - Modo demonstração",
     generator: 'v0.dev'
 }
 
@@ -22,12 +19,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <SessionProvider>
-          <AppProvider>
-            {children}
-            <NotificationSystem />
-          </AppProvider>
-        </SessionProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
