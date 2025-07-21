@@ -9,8 +9,8 @@ import { SessionProvider } from "next-auth/react"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Julius Invest - Sandbox Educacional",
-  description: "Plataforma educacional de investimentos com gamificação e transparência total",
+  title: "Julius Investidor - Desafio Bilionário",
+  description: "Plataforma gamificada de investimentos com missões, rankings e comunidade",
     generator: 'v0.dev'
 }
 
